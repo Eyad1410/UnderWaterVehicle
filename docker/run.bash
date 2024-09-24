@@ -2,7 +2,7 @@
 
 xhost +local:docker
 
-docker run -it --rm\
+docker run -it\
   --privileged \
   --network=host \
   --env="DISPLAY" \
