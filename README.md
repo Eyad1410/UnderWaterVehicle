@@ -32,6 +32,7 @@ GST_PLUGIN_PATH=install/gst_bridge/lib/gst_bridge gst-launch-1.0 --gst-plugin-pa
 cd UnderWaterVehicle/
 source /opt/ros/humble/setup.bash
 colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
+source install/setup.bash 
 ros2 launch mavros apm.launch
 ```
 ## Application
