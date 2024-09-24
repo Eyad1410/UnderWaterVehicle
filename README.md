@@ -1,6 +1,13 @@
 # UnderWaterVehicle
 UUV
-
+## Git
+```
+cd UnderWaterVehicle
+git status
+git add the file
+git commit -m "add a new node"
+git push
+```
 ## Hardware and Software Setup
 
 #### MavROS - Humble
