@@ -10,6 +10,7 @@ docker run -it\
   --env="QT_X11_NO_MITSHM=1" \
   --volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" \
   --volume="/dev:/dev" \
+  --volume="/run/user:/run/user" \
   --volume="${HOME}/UnderWaterVehicle:/UnderWaterVehicle" \
   --name="mavros" \
   hub.ci.dfl.ae/roboticslab/ros2_humble_x86_no_gpu:mavros

@@ -15,6 +15,7 @@ services:
     volumes:
       - "${HOME}/UnderWaterVehicle:/ws_uuv"
       - "/dev:/dev"
+      - "/run/user:/run/user"
       - "/tmp/.X11-unix:/tmp/.X11-unix:rw"
 
   uuv_ardusub_simulator_apm:
@@ -44,5 +45,6 @@ services:
     container_name: uuv_ardusub_dev
     volumes:
       - "${HOME}/UnderWaterVehicle:/UnderWaterVehicle"
+      - "${HOME}/UnderWaterVehicle:/ws_uuv"
       - "/dev:/dev"
       - "/tmp/.X11-unix:/tmp/.X11-unix:rw"

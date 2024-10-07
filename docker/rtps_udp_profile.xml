@@ -42,7 +42,7 @@ license agreement from NVIDIA CORPORATION is strictly prohibited.
             <transport_id>UdpTransport</transport_id>
             <type>UDPv4</type>
             <interfaceWhiteList>
-                <address>192.168.50.131</address>
+                <address>127.0.0.1</address>
             </interfaceWhiteList>
         </transport_descriptor>
     </transport_descriptors>
