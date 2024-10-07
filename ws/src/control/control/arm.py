@@ -53,7 +53,7 @@ class ArmAndMoveClient(Node):
 
         # Create a velocity command to move forward
         twist_msg = Twist()
-        twist_msg.linear.x = 1.0  # Move forward with speed 1.0 m/s
+        twist_msg.linear.x = 0.5  # Move forward with speed 1.0 m/s
         twist_msg.linear.y = 0.0
         twist_msg.linear.z = 0.0
         twist_msg.angular.x = 0.0

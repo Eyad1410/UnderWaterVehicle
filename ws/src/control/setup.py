@@ -21,6 +21,7 @@ setup(
     entry_points={
         'console_scripts': [
         'arm = control.arm:main',  # arm set
+        'arm2 = control.arm2:main',
         ],
     },
 )
