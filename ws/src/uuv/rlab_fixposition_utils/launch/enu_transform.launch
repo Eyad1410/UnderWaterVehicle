@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<launch>
+
+  <!--name argument is not required, because it will overwrite all node name in the exec-->
+  <node pkg="rlab_fixposition_utils" exec="enu_transform_node" output="screen" respawn="false">
+  </node>
+
+</launch>
