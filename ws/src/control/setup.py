@@ -22,6 +22,9 @@ setup(
         'console_scripts': [
         'arm = control.arm:main',  # arm set
         'arm2 = control.arm2:main',
+        'arm3 = control.arm3:main',
+        'autonomous_rov_server = control.autonomous_rov_server:main',
+        'autonomous_rov_client = control.autonomous_rov_client:main',
         ],
     },
 )

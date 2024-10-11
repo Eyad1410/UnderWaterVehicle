@@ -7,10 +7,25 @@ find_package(rclcpp REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(mavros_msgs REQUIRED)
 
+set(dependencies
+  rclcpp
+  geometry_msgs
+  mavros_msgs
+)
+
+
+include_directories(
+  include
+)
+
 # Add your C++ executables
 add_executable(arm_and_move_client
   src/ArmServiceClient.cpp
   src/main.cpp
+)
+
+ament_target_dependencies(arm_and_move_client
+  ${dependencies}
 )
 
 # Include directories for header files
