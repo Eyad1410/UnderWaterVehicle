@@ -1,0 +1,9 @@
+#goal definition
+string robot_id
+float32 idle_time
+---
+#result definition
+bool success
+---
+#feedback definition
+string progress

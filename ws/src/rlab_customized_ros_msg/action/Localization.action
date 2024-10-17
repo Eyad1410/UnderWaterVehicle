@@ -1,0 +1,5 @@
+geometry_msgs/PoseWithCovarianceStamped initial_pose
+---
+float32 rating
+---
+int32 progress

@@ -1,0 +1,5 @@
+bool trigger
+---
+float32 rating
+---
+int32 progress

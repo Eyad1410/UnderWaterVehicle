@@ -1,0 +1,8 @@
+#goal definition
+string robot_id
+---
+#result definition
+bool is_hardware_health
+---
+#feedback definition
+string progress

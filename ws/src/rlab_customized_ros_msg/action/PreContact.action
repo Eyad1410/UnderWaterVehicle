@@ -1,0 +1,9 @@
+#goal definition
+bool start
+string tag_id
+float32 search_time
+---
+#result definition
+bool succeed
+---
+#feedback definition

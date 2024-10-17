@@ -1,0 +1,5 @@
+bool lock_cmd
+---
+int32 lock_open
+---
+int32 progress
