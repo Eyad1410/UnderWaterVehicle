@@ -18,6 +18,8 @@
   <depend>action_msgs</depend>
   <depend>rclpy_action</depend>
   <depend>geometry_msgs</depend>
+  <depend>rlab_customized_ros_msg</depend>
+
 
   <!-- Test dependencies -->
   <test_depend>ament_copyright</test_depend>

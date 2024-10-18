@@ -1,0 +1,9 @@
+# Goal (request from the client)
+geometry_msgs/PoseStamped target_pose
+---
+# Result (final outcome from the server)
+bool success
+---
+# Feedback (progress information from the server)
+float32 progress
+
