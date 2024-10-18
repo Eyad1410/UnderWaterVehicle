@@ -35,6 +35,40 @@ colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
 source install/setup.bash 
 ros2 launch mavros apm.launch
 ```
+## How to run Rviz2 
+```
+docker exec -it uuv_ardusub_dev bash
+cd UnderWaterVehicle/ws/
+source install/setup.bash 
+rviz2
+```
+## Ardusub_Simulator in Host
+```
+cd UnderWaterVehicle/docker/
+docker start uuv_ardusub_simulator
+docker start uuv_ardusub_simulator_apm
+```
+## How to run Action Server and Client
+```
+docker exec -it uuv_ardusub_dev bash
+cd UnderWaterVehicle/ws/
+colcon build --packages-select rlab_customized_ros_msg control
+source install/setup.bash
+ros2 run control autonomous_rov_server
+```
+## Open a new terminal to run Client in uuv_ardusub_dev container 
+```
+docker exec -it uuv_ardusub_dev bash
+cd UnderWaterVehicle/ws/
+source install/setup.bash
+ros2 run control autonomous_rov_client
+```
+<p align='center'>
+    <img src="https://github.com/dfl-rlab/documentation_materials/blob/master/uuv/uuv_snail.png" width="780" height="560"/>
+</p>
+
+
+
 ## Application
 #### ROS High Level Control
 #### Path Planning
