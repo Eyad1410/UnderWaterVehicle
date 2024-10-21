@@ -9,7 +9,16 @@ class AutonomousROVClient(Node):
     def __init__(self):
         super().__init__('autonomous_rov_client')
         self._action_client = ActionClient(self, MoveToPose, 'move_to_pose')
-
+        
+        self.temperature_timer_ = self.create_timer(
+            1.0, self.timerCb)
+        self.counter = 0
+    def timerCb(self):
+        self.get_logger().info('Hi')
+        self.counter = self.counter + 1
+        if(self.counter>10):
+            self._action_client.cancel_goal_async()
+            
     def send_goal(self):
         # Wait for the action server to be available
         self.get_logger().info('Waiting for action server...')
