@@ -67,8 +67,10 @@ ros2 run control autonomous_rov_client
     <img src="https://github.com/dfl-rlab/documentation_materials/blob/master/uuv/uuv_snail.png" width="780" height="560"/>
 </p>
 
-
-
+## Building the Workspace
+```
+colcon build --symlink-install
+```
 ## Application
 #### ROS High Level Control
 #### Path Planning
