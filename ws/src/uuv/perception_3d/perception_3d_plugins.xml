@@ -1,0 +1,10 @@
+<class_libraries>
+  <library path="layers">
+
+    <class type="perception_3d::NothingLayer"  base_class_type="perception_3d::Sensor">
+      <description>TBW</description>
+    </class>
+
+  </library>
+</class_libraries>
+
