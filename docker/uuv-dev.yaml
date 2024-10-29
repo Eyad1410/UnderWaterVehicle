@@ -46,17 +46,17 @@ services:
       - "/dev:/dev"
       - "/tmp/.X11-unix:/tmp/.X11-unix:rw"
 
-  uuv_ardusub_dev:
-    image: hub.ci.dfl.ae/roboticslab/ros2_humble_x86_no_gpu:bluerov2
-    command: bash -c "sleep infinity"
-    network_mode: host
-    privileged: true
-    stdin_open: true
-    tty: true
-    env_file:
-      - general.env
-    container_name: uuv_ardusub_dev
-    volumes:
-      - "${HOME}/UnderWaterVehicle/ws:/home/bluerov2/ws_uuv"
-      - "/dev:/dev"
-      - "/tmp/.X11-unix:/tmp/.X11-unix:rw"
+  #uuv_ardusub_dev:
+  #  image: hub.ci.dfl.ae/roboticslab/ros2_humble_x86_no_gpu:bluerov2
+  #  command: bash -c "sleep infinity"
+  #  network_mode: host
+  #  privileged: true
+  #  stdin_open: true
+  #  tty: true
+  #  env_file:
+  #    - general.env
+  #  container_name: uuv_ardusub_dev
+  #  volumes:
+  #    - "${HOME}/UnderWaterVehicle/ws:/home/bluerov2/ws_uuv"
+  #    - "/dev:/dev"
+  #    - "/tmp/.X11-unix:/tmp/.X11-unix:rw"
