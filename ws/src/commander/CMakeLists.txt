@@ -33,6 +33,7 @@ ament_python_install_package(${PROJECT_NAME})
 # Install Python executables
 install(PROGRAMS
   scripts/head_out.py
+  scripts/arm_and_guide.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

@@ -11,8 +11,16 @@
   </node>
   <node pkg="p2p_move_base" exec="clicked2goal.py" output="screen" respawn="false"/>
   
-
   <let name="rviz_config" value="$(find-pkg-share p2p_move_base)/rviz/p2p_move_base.rviz"/>
   <node name="rviz2" pkg="rviz2" exec="rviz2" args="-d $(var rviz_config)"/>
+
+  <node pkg="mavros_local_odom_tf" exec="local_odom2tf" output="screen" respawn="false">
+  </node>
+
+  <node pkg="bluerov2_slide_controller" exec="bluerov2_slide_controller" output="screen" respawn="false">
+  </node>
+
+  <node pkg="uuv_commander" exec="arm_and_guide.py" output="screen" respawn="false">
+  </node>
 
 </launch>
