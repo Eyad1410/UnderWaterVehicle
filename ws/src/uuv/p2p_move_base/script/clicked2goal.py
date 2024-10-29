@@ -32,6 +32,7 @@ class Nav2dGoalSub():
         a_pose.pose.position.z = msg.point.z
         a_pose.pose.orientation.w = 1.0
         a_pose.header.frame_id = "map"
+        a_pose.header.stamp = self.get_clock().now().to_msg()
         self.nav2d_goal = PToPMoveBase.Goal()
         self.nav2d_goal.target_pose = a_pose
 

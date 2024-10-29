@@ -20,7 +20,7 @@ class HeadOut(Node):
     
     def __init__(self):
 
-        super().__init__('head_out_node')
+        super().__init__('arm_and_guide')
         
         self.clock = self.get_clock()
 
@@ -33,7 +33,7 @@ class HeadOut(Node):
 
         sub_group = MutuallyExclusiveCallbackGroup()
         self.mavros_state_sub = self.create_subscription(State, 'mavros/state', self.mavrosStateCb, 3, callback_group=sub_group)
-        self.mavros_state_ = State()
+        self.mavros_state_ = []
 
         #Create service
         cg_service_group = MutuallyExclusiveCallbackGroup()
@@ -59,6 +59,9 @@ class HeadOut(Node):
 
     def fsmControlLoop(self):
 
+        if(not self.mavros_state_):
+            return
+
         if(self.fsm == "FSM_Change_Mode"):
             if(not self.mavros_state_.mode == self.mavros_mode_req.custom_mode):
                 self.get_logger().info("Change vehicle mode")
@@ -71,7 +74,9 @@ class HeadOut(Node):
                     self.fsm = "FSM_Try_Arming"
                 else:
                     self.get_logger().info("Vehicle mode not change")
-
+            else:
+                self.get_logger().info("UUV is already in the state: %s" % self.mavros_state_.mode)
+                self.fsm = "FSM_Try_Arming"
 
         elif(self.fsm == "FSM_Try_Arming"):
             if(not self.mavros_state_.armed):

@@ -86,7 +86,7 @@ class LocalOdom2Tf : public rclcpp::Node
 void LocalOdom2Tf::init(){
   
   //Subscriber and Publisher
-  odom_sub_ = this->create_subscription<nav_msgs::msg::Odometry>("mavros/global_position/local",  rclcpp::QoS(rclcpp::KeepLast(1)).durability_volatile().best_effort(), std::bind(&LocalOdom2Tf::odomCb, this, _1));
+  odom_sub_ = this->create_subscription<nav_msgs::msg::Odometry>("mavros/local_position/local",  rclcpp::QoS(rclcpp::KeepLast(1)).durability_volatile().best_effort(), std::bind(&LocalOdom2Tf::odomCb, this, _1));
 
   //TF broadcaster
   tf_broadcaster_ = std::make_shared<tf2_ros::TransformBroadcaster>(this);

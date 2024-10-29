@@ -19,7 +19,7 @@ services:
 
   uuv_ardusub_gazebo:
     image: hub.ci.dfl.ae/roboticslab/ros2_humble_x86_no_gpu:bluerov2
-    command: bash -c "bash /home/bluerov2/haha.bash && gz sim -v 3 -r bluerov2_heavy_underwater.world"
+    command: bash -c "gz sim -v 3 -r bluerov2_heavy_underwater.world"
     network_mode: host
     privileged: true
     stdin_open: true

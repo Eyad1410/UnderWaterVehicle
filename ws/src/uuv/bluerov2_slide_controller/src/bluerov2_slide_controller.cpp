@@ -44,7 +44,7 @@ void BlueRov2SlideController::OdomCb(const nav_msgs::msg::Odometry::SharedPtr ms
     compensate_vy_ = std::min(compensate_vy_, 0.8);
   else
     compensate_vy_ = std::max(compensate_vy_, -0.8);
-  RCLCPP_INFO(this->get_logger(), "Target Y: %.2f, Compensate Y: %.3f, error_i: %.3f, error: %.2f, dt: %.5f", cmd_vel_msg_.linear.y , compensate_vy_, error_i_, error_, dt.seconds());
+  //RCLCPP_INFO(this->get_logger(), "Target Y: %.2f, Compensate Y: %.3f, error_i: %.3f, error: %.2f, dt: %.5f", cmd_vel_msg_.linear.y , compensate_vy_, error_i_, error_, dt.seconds());
   geometry_msgs::msg::TransformStamped transformStamped;
 
   try
