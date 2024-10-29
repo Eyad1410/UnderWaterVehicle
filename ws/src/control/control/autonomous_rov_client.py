@@ -1,90 +1,86 @@
 import rclpy
-from rclpy.action import ActionClient
 from rclpy.node import Node
+from rclpy.action import ActionClient
 from rlab_customized_ros_msg.action import MoveToPose
+from geometry_msgs.msg import PoseStamped
 import time
-from rclpy.executors import MultiThreadedExecutor
 
-class ExampleMoveToPoseClient(Node):
+class AutonomousROVClient(Node):
     def __init__(self):
-        super().__init__('example_trigger_client')
-        self.get_logger().info("Starting trigger client")
+        super().__init__('autonomous_rov_client')
         self._action_client = ActionClient(self, MoveToPose, 'move_to_pose')
-<<<<<<< HEAD
         
-        self.temperature_timer_ = self.create_timer(
-            1.0, self.timerCb)
+        # Create a timer that calls timerCb every second
+        self.temperature_timer_ = self.create_timer(1.0, self.timerCb)
         self.counter = 0
-    def timerCb(self):
-        self.get_logger().info('Hi')
-        self.counter = self.counter + 1
-        if(self.counter>10):
-            self._action_client.cancel_goal_async()
-            
-=======
-        self.gh = ''
-        self.goal_sent_time = None
+        self._goal_handle = None  # Store the goal handle to use for canceling
 
->>>>>>> e3c0c4b (Latest move_to_pose action file & util_AS)
+    def timerCb(self):
+        self.get_logger().info('Timer callback called')
+        self.counter += 1
+        # If the timer has been called more than 10 times, cancel the goal
+        if self.counter > 30 and self._goal_handle is not None:
+            self.get_logger().info('Cancelling goal...')
+            cancel_future = self._goal_handle.cancel_goal_async()
+            cancel_future.add_done_callback(self.cancel_done_callback)
+
+    def cancel_done_callback(self, future):
+        cancel_response = future.result()
+        if len(cancel_response.goals_canceling) > 0:
+            self.get_logger().info('Goal successfully canceled')
+        else:
+            self.get_logger().info('Goal cancel failed')
+
     def send_goal(self):
-        self.get_logger().info("Sending Goal")
-        goal_msg = MoveToPose.Goal()
-        # Set target pose or other parameters for the MoveToPose action here
-        goal_msg.target_pose.pose.position.z = -2.0  # Example value
-        goal_msg.target_pose.pose.orientation.w = 1.0
+        # Wait for the action server to be available
+        self.get_logger().info('Waiting for action server...')
         self._action_client.wait_for_server()
-        self._send_goal_future = self._action_client.send_goal_async(goal_msg)
+
+        # Create a goal message
+        goal_msg = MoveToPose.Goal()
+        goal_msg.target_pose = self.create_target_pose()
+
+        self.get_logger().info(f'Sending goal: {goal_msg.target_pose}')
+        self._send_goal_future = self._action_client.send_goal_async(goal_msg, feedback_callback=self.feedback_callback)
         self._send_goal_future.add_done_callback(self.goal_response_callback)
-        self.get_logger().info("Goal sent. Waiting response")
-        self.goal_sent_time = time.time()
+
+    def create_target_pose(self):
+        # Define the target pose to reach a depth of -2 meters
+        pose = PoseStamped()
+        pose.header.frame_id = 'map'
+        pose.pose.position.x = 0.0
+        pose.pose.position.y = 0.0
+        pose.pose.position.z = -2.0  # Target depth included in the goal
+        pose.pose.orientation.w = 1.0
+        return pose
 
     def goal_response_callback(self, future):
         goal_handle = future.result()
-        self.gh = goal_handle
         if not goal_handle.accepted:
             self.get_logger().info('Goal rejected :(')
             return
+
         self.get_logger().info('Goal accepted :)')
+        self._goal_handle = goal_handle  # Store the goal handle to use later for canceling
         self._get_result_future = goal_handle.get_result_async()
         self._get_result_future.add_done_callback(self.get_result_callback)
-    
-    def get_result_callback(self, future):
-        if future.result().status == 4:
-            self.get_logger().info('Goal status: Succeed')
-        else:
-            if future.result().status == 6: 
-                self.get_logger().info('Goal status: ABORTED')
-            else:
-                pass
-                # self.get_logger().info('Goal status: ' + str(future.result().status))
 
-        # Additional handling of result if needed
-        # rclpy.shutdown()
-        
+    def feedback_callback(self, feedback_msg):
+        self.get_logger().info(f'Feedback: {feedback_msg.feedback.progress * 100:.2f}% complete')
+
+    def get_result_callback(self, future):
+        result = future.result().result
+        if result.success:
+            self.get_logger().info('Goal succeeded')
+        else:
+            self.get_logger().info('Goal failed')
+        rclpy.shutdown()
+
 def main(args=None):
     rclpy.init(args=args)
-    action_client = ExampleMoveToPoseClient()
-    executor = MultiThreadedExecutor()
-    executor.add_node(action_client)
-    b = True
-    turn_on_count = 0
-    turn_off_count = 0
-    while rclpy.ok():
-        current_time = time.time()
-        if b:
-            action_client.send_goal()             
-            b = False
-            turn_on_count += 1
-            action_client.get_logger().warn('>>>>>>>> send goal, total count %d' % turn_on_count)
-        else:
-            if action_client.goal_sent_time and (current_time - action_client.goal_sent_time > 30):
-                action_client.gh.cancel_goal_async() 
-                b = True
-                action_client.goal_sent_time = None
-                turn_off_count += 1
-                action_client.get_logger().warn('>>>>>>>> cancel goal, total count %d' % turn_off_count)
-        executor.spin_once(timeout_sec=0.2)     
-    action_client.get_logger().warn('>>>>>>>> 123')
+    rov_client = AutonomousROVClient()
+    rov_client.send_goal()
+    rclpy.spin(rov_client)
 
 if __name__ == '__main__':
     main()
