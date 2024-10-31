@@ -1,5 +1,5 @@
-#  Util AS
-Util AS (example as_idle.py is python action server  , include prevent double trigger cause multi thread issue and action client cancel request)
+# control_as 
+This package provides an autonomous control system for a remotely operated vehicle (ROV). The control system includes an action server and client (autonomous_rov_controller.py and autonomous_rov_client.py), which enable the ROV to perform automated snail pattern.
 
 #### Dependence requirement:
   - rlab_customized_ros_msg
@@ -10,16 +10,17 @@ Util AS (example as_idle.py is python action server  , include prevent double tr
  Terminal1 :
 
 ```
-ros2 run util_AS as_idle.py 
+ros2 run control_as autonomous_rov_controller.py
 ```
 
  Terminal2 (ros command) :
 
 ```
-ros2 action send_goal /as_idle_test rlab_customized_ros_msg/action/Idle {robot_id:\ \'\',idle_time:\ 10.0\}
+ros2 action send_goal /snail_pattern rlab_customized_ros_msg/action/SnailPattern "{initial_side_length: 2.0, increment: 2.0, max_side_length: 10.0}"
+
 ```
 
 Terminal2  (python script):
 ```
-python3 example_trigger_client.py
+python3 autonomous_rov_client.py
 ```
