@@ -38,8 +38,8 @@ install(PROGRAMS
   scripts/tf_utils.py
   scripts/c_log_manager.py
 
-  scripts/example_trigger_client.py
-  scripts/as_move.py
+  scripts/autonomous_rov_client.py
+  scripts/autonomous_rov_controller.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
