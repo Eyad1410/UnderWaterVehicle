@@ -1,25 +1,24 @@
+#!/usr/bin/env python3
 import rclpy
 from rclpy.node import Node
 from rclpy.action import ActionClient
-from rlab_customized_ros_msg.action import MoveToPose
-from geometry_msgs.msg import PoseStamped
+from rlab_customized_ros_msg.action import SnailPattern
 import time
 
 class AutonomousROVClient(Node):
     def __init__(self):
         super().__init__('autonomous_rov_client')
-        self._action_client = ActionClient(self, MoveToPose, 'move_to_pose')
+        self._action_client = ActionClient(self, SnailPattern, 'snail_pattern')
         
-        # Create a timer that calls timerCb every second
-        self.temperature_timer_ = self.create_timer(1.0, self.timerCb)
+        # Timer for regular checks, such as for cancellation
+        self.timer = self.create_timer(1.0, self.timer_cb)
         self.counter = 0
         self._goal_handle = None  # Store the goal handle to use for canceling
 
-    def timerCb(self):
-        self.get_logger().info('Timer callback called')
+    def timer_cb(self):
         self.counter += 1
-        # If the timer has been called more than 10 times, cancel the goal
-        if self.counter > 30 and self._goal_handle is not None:
+        # Cancel the goal if the timer has been called more than 100 times
+        if self.counter > 100 and self._goal_handle is not None:
             self.get_logger().info('Cancelling goal...')
             cancel_future = self._goal_handle.cancel_goal_async()
             cancel_future.add_done_callback(self.cancel_done_callback)
@@ -30,38 +29,34 @@ class AutonomousROVClient(Node):
             self.get_logger().info('Goal successfully canceled')
         else:
             self.get_logger().info('Goal cancel failed')
+        # Reset and send a new goal after cancellation
+        self.reset_and_send_goal()
 
     def send_goal(self):
-        # Wait for the action server to be available
-        self.get_logger().info('Waiting for action server...')
-        self._action_client.wait_for_server()
+        self.get_logger().info('Waiting for SnailPattern action server...')
+        if not self._action_client.wait_for_server(timeout_sec=5.0):
+            self.get_logger().error("Action server not available!")
+            return
 
-        # Create a goal message
-        goal_msg = MoveToPose.Goal()
-        goal_msg.target_pose = self.create_target_pose()
+        # Define the goal
+        goal_msg = SnailPattern.Goal()
+        goal_msg.initial_side_length = 2.0
+        goal_msg.increment = 2.0
+        goal_msg.max_side_length = 10.0
 
-        self.get_logger().info(f'Sending goal: {goal_msg.target_pose}')
+        self.get_logger().info(f'Sending SnailPattern goal: {goal_msg}')
         self._send_goal_future = self._action_client.send_goal_async(goal_msg, feedback_callback=self.feedback_callback)
         self._send_goal_future.add_done_callback(self.goal_response_callback)
-
-    def create_target_pose(self):
-        # Define the target pose to reach a depth of -2 meters
-        pose = PoseStamped()
-        pose.header.frame_id = 'map'
-        pose.pose.position.x = 0.0
-        pose.pose.position.y = 0.0
-        pose.pose.position.z = -2.0  # Target depth included in the goal
-        pose.pose.orientation.w = 1.0
-        return pose
 
     def goal_response_callback(self, future):
         goal_handle = future.result()
         if not goal_handle.accepted:
-            self.get_logger().info('Goal rejected :(')
+            self.get_logger().info('Goal rejected')
+            self.reset_and_send_goal()  # Send a new goal if rejected
             return
 
-        self.get_logger().info('Goal accepted :)')
-        self._goal_handle = goal_handle  # Store the goal handle to use later for canceling
+        self.get_logger().info('Goal accepted')
+        self._goal_handle = goal_handle
         self._get_result_future = goal_handle.get_result_async()
         self._get_result_future.add_done_callback(self.get_result_callback)
 
@@ -74,7 +69,14 @@ class AutonomousROVClient(Node):
             self.get_logger().info('Goal succeeded')
         else:
             self.get_logger().info('Goal failed')
-        rclpy.shutdown()
+        # Reset and send a new goal after each result
+        self.reset_and_send_goal()
+
+    def reset_and_send_goal(self):
+        """Reset the client state and send a new goal."""
+        self._goal_handle = None
+        self.counter = 0  # Reset counter
+        self.send_goal()
 
 def main(args=None):
     rclpy.init(args=args)
@@ -84,3 +86,4 @@ def main(args=None):
 
 if __name__ == '__main__':
     main()
+
