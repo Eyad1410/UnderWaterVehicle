@@ -36,6 +36,10 @@ source install/setup.bash
 ros2 launch mavros apm.launch
 ```
 ## How to run Rviz2 
+To launch the local_odom2tf node, run:
+```
+ros2 run mavros_local_odom_tf local_odom2tf 
+```
 ```
 docker exec -it uuv_ardusub_dev bash
 cd UnderWaterVehicle/ws/
