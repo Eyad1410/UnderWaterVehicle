@@ -17,8 +17,8 @@ class AutonomousROVClient(Node):
 
     def timer_cb(self):
         self.counter += 1
-        # Cancel the goal if the timer has been called more than 100 times
-        if self.counter > 100 and self._goal_handle is not None:
+        # Cancel the goal if the timer has been called more than 1000 times
+        if self.counter > 1000 and self._goal_handle is not None:
             self.get_logger().info('Cancelling goal...')
             cancel_future = self._goal_handle.cancel_goal_async()
             cancel_future.add_done_callback(self.cancel_done_callback)
@@ -42,7 +42,7 @@ class AutonomousROVClient(Node):
         goal_msg = SnailPattern.Goal()
         goal_msg.initial_side_length = 2.0
         goal_msg.increment = 2.0
-        goal_msg.max_side_length = 10.0
+        goal_msg.max_side_length = 20.0
 
         self.get_logger().info(f'Sending SnailPattern goal: {goal_msg}')
         self._send_goal_future = self._action_client.send_goal_async(goal_msg, feedback_callback=self.feedback_callback)
@@ -86,4 +86,3 @@ def main(args=None):
 
 if __name__ == '__main__':
     main()
-

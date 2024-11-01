@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 import rclpy
+from rclpy.qos import QoSProfile, ReliabilityPolicy, HistoryPolicy
 from rclpy.action import ActionServer, GoalResponse, CancelResponse
 from geometry_msgs.msg import PoseStamped, Twist
+from nav_msgs.msg import Odometry
 from mavros_msgs.srv import SetMode, CommandBool
 from rclpy.node import Node
 from rlab_customized_ros_msg.action import SnailPattern
 from std_msgs.msg import Header
 from rclpy.callback_groups import ReentrantCallbackGroup
 from rclpy.executors import MultiThreadedExecutor
-import time
 import math
 from rclpy.duration import Duration
 
@@ -28,6 +29,21 @@ class AutonomousROVController(Node):
 
         self.position_publisher = self.create_publisher(PoseStamped, '/mavros/setpoint_position/local', 10)
         self.velocity_publisher = self.create_publisher(Twist, '/mavros/setpoint_velocity/cmd_vel_unstamped', 10)
+
+        # Configure QoS for odometry subscription to match publisher's settings
+        qos_profile = QoSProfile(
+            reliability=ReliabilityPolicy.BEST_EFFORT,
+            history=HistoryPolicy.KEEP_LAST,
+            depth=1
+        )
+        self.odom_subscription = self.create_subscription(
+            Odometry,
+            '/mavros/local_position/odom',
+            self.odom_callback,
+            qos_profile
+        )
+        self.current_position = None
+        self.start_position = None
 
         self.arm_rov()
         self.set_mode('GUIDED')
@@ -61,6 +77,10 @@ class AutonomousROVController(Node):
         self.get_logger().info('Received cancel request')
         self.canceled = True  # Track cancellation
         return CancelResponse.ACCEPT
+
+    def odom_callback(self, msg):
+        """Callback to update current position from odometry data."""
+        self.current_position = msg.pose.pose.position
 
     def execute_callback(self, goal_handle):
         self.get_logger().info('Executing SnailPattern')
@@ -190,36 +210,37 @@ class AutonomousROVController(Node):
         return True
 
     def move_forward(self, goal_handle, distance=10.0):
-        """Move forward based on the current yaw angle set in rotate_to_yaw."""
+        """Move forward using odometry to measure the actual distance traveled."""
         velocity = Twist()
-        speed = 0.3
-        traveled_distance = 0.0
-        last_time = self.get_clock().now()
+        speed = 2.0
+        self.start_position = self.current_position  # Set the start position for distance calculation
 
-        while traveled_distance < distance and rclpy.ok():
+        while self.get_traveled_distance() < distance and rclpy.ok():
             if goal_handle.is_cancel_requested:
                 self.get_logger().info('Goal canceled during forward movement')
                 goal_handle.canceled()
                 return False
 
-            # Calculate time elapsed and distance covered
-            current_time = self.get_clock().now()
-            elapsed_time = (current_time - last_time).nanoseconds / 1e9
-            traveled_distance += speed * elapsed_time
-
-            # Calculate directional movement based on current_yaw
+            # Set movement based on current_yaw
             velocity.linear.x = speed * math.cos(self.current_yaw)
             velocity.linear.y = speed * math.sin(self.current_yaw)
             self.velocity_publisher.publish(velocity)
 
-            self.get_logger().info(f'Moving forward: traveled {traveled_distance:.2f} m of {distance} m at speed {speed} m/s')
-            last_time = current_time
+            traveled = self.get_traveled_distance()
+            self.get_logger().info(f'Moving forward: traveled {traveled:.2f} m of {distance} m at speed {speed} m/s')
             rclpy.spin_once(self, timeout_sec=0.1)
 
         self.stop_movement()
         self.get_logger().info('Stopping movement')
         self.stabilize_after_action(duration=2.0)
         return True
+
+    def get_traveled_distance(self):
+        if self.start_position and self.current_position:
+            dx = self.current_position.x - self.start_position.x
+            dy = self.current_position.y - self.start_position.y
+            return math.sqrt(dx ** 2 + dy ** 2)
+        return 0.0
 
     def stop_movement(self):
         self.velocity_publisher.publish(Twist())
@@ -232,7 +253,7 @@ class AutonomousROVController(Node):
             self.velocity_publisher.publish(Twist())
             rclpy.spin_once(self, timeout_sec=0.1)
 
-    def execute_snail_pattern(self, goal_handle, initial_side_length=2.0, increment=2.0, max_side_length=10.0):
+    def execute_snail_pattern(self, goal_handle, initial_side_length=2.0, increment=2.0, max_side_length=20.0):
         """Execute the snail pattern, with each segment aligned to the specified yaw angles."""
         current_side_length = initial_side_length
         yaw_angles = [0, -90, -180, -270]
@@ -268,7 +289,3 @@ def main(args=None):
 
 if __name__ == '__main__':
     main()
-
-
-
-
