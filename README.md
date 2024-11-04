@@ -26,22 +26,22 @@ By default, BlueROV2 runs Gstream udp
 ```
 GST_PLUGIN_PATH=install/gst_bridge/lib/gst_bridge gst-launch-1.0 --gst-plugin-path=install/lib/gst_bridge/ udpsrc port=5600 ! 'application/x-rtp,encoding-name=H264,payload=96,clock-rate=90000' ! rtph264depay ! avdec_h264 ! queue leaky=1 ! decodebin ! videoconvert ! rosimagesink ros-topic="/fixposition/image" sync=false
 ```
-## How to run Mavros 
-```
-./run.bash
-cd UnderWaterVehicle/
-source /opt/ros/humble/setup.bash
-colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
-source install/setup.bash 
-ros2 launch mavros apm.launch
-```
+
 ## How to run Mavros new 
 ```
 git clone https://github.com/dfl-rlab/UnderWaterVehicle.git
+```
+## Build Docker Image for ArduPilot BlueROV2: 
+```
 cd UnderWaterVehicle/docker
 docker build -t hub.ci.dfl.ae/roboticslab/ros2_humble_x86_no_gpu:bluerov2 -f Dockerfile_ardupilot_bluerov2 .
 ```
-### 
+## Use Docker Compose to start the container environment
+```
+cd UnderWaterVehicle/docker
+docker compose -f uuv-dev.yaml up
+```
+## Build and Setup Workspace
 ```
 docker exec -it uuv_ardusub_dev bash
 cd ~/UnderWaterVehicle/ws
@@ -50,7 +50,6 @@ colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
 source install/setup.bash 
 
 ```
-
 ## How to run Rviz2 
 To launch the local_odom2tf node, run:
 ```
@@ -62,6 +61,38 @@ cd UnderWaterVehicle/ws/
 source /opt/ros/humble/setup.bash
 source install/setup.bash 
 rviz2
+```
+## Launching the Autonomous ROV Controller:
+```
+docker exec -it uuv_ardusub_dev bash
+cd UnderWaterVehicle/ws/
+ros2 run control_as autonomous_rov_controller.py
+```
+## Running Action autonomous_rov_client:
+### open another terminal to run:
+```
+docker exec -it uuv_ardusub_dev bash
+cd UnderWaterVehicle/ws/
+source install/setup.bash
+ros2 run control_as autonomous_rov_client.py
+```
+## Testing Action Client Goals 
+### Snail Pattern Movement:
+```
+ros2 action send_goal /snail_pattern rlab_customized_ros_msg/action/SnailPattern \
+"{initial_side_length: 2.0, increment: 2.0, max_side_length: 10.0}"
+```
+
+--------------------------------------------------------------------
+--------------------------------------------------------------------
+## How to run Mavros 
+```
+./run.bash
+cd UnderWaterVehicle/
+source /opt/ros/humble/setup.bash
+colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
+source install/setup.bash 
+ros2 launch mavros apm.launch
 ```
 ## Ardusub_Simulator in Host
 ```
