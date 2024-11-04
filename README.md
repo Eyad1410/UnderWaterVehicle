@@ -35,10 +35,31 @@ colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
 source install/setup.bash 
 ros2 launch mavros apm.launch
 ```
+## How to run Mavros new 
+```
+git clone https://github.com/dfl-rlab/UnderWaterVehicle.git
+cd UnderWaterVehicle/docker
+docker build -t hub.ci.dfl.ae/roboticslab/ros2_humble_x86_no_gpu:bluerov2 -f Dockerfile_ardupilot_bluerov2 .
+```
+### 
+```
+docker exec -it uuv_ardusub_dev bash
+cd ~/UnderWaterVehicle/ws
+source /opt/ros/humble/setup.bash
+colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
+source install/setup.bash 
+
+```
+
 ## How to run Rviz2 
+To launch the local_odom2tf node, run:
+```
+ros2 run mavros_local_odom_tf local_odom2tf 
+```
 ```
 docker exec -it uuv_ardusub_dev bash
 cd UnderWaterVehicle/ws/
+source /opt/ros/humble/setup.bash
 source install/setup.bash 
 rviz2
 ```
@@ -52,7 +73,7 @@ docker start uuv_ardusub_simulator_apm
 ```
 docker exec -it uuv_ardusub_dev bash
 cd UnderWaterVehicle/ws/
-colcon build --packages-select rlab_customized_ros_msg control
+colcon build --packages-select rlab_customized_ros_msg control --symlink-install
 source install/setup.bash
 ros2 run control autonomous_rov_server
 ```
