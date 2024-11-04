@@ -61,13 +61,14 @@ source /opt/ros/humble/setup.bash
 source install/setup.bash 
 rviz2
 ```
-## Launching the Autonomous ROV Controller:
+## Running Autonomous ROV Controller:
 ```
 docker exec -it uuv_ardusub_dev bash
 cd UnderWaterVehicle/ws/
+source install/setup.bash
 ros2 run control_as autonomous_rov_controller.py
 ```
-## Running Action autonomous_rov_client:
+## Running Action autonomous ROV Client:
 ### open another terminal to run:
 ```
 docker exec -it uuv_ardusub_dev bash
