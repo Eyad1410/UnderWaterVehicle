@@ -48,7 +48,6 @@ cd ~/UnderWaterVehicle/ws
 source /opt/ros/humble/setup.bash
 colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
 source install/setup.bash 
-
 ```
 ## How to run Rviz2 
 To launch the local_odom2tf node, run:
