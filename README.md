@@ -85,36 +85,6 @@ ros2 action send_goal /snail_pattern rlab_customized_ros_msg/action/SnailPattern
 
 --------------------------------------------------------------------
 --------------------------------------------------------------------
-## How to run Mavros 
-```
-./run.bash
-cd UnderWaterVehicle/
-source /opt/ros/humble/setup.bash
-colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
-source install/setup.bash 
-ros2 launch mavros apm.launch
-```
-## Ardusub_Simulator in Host
-```
-cd UnderWaterVehicle/docker/
-docker start uuv_ardusub_simulator
-docker start uuv_ardusub_simulator_apm
-```
-## How to run Action Server and Client
-```
-docker exec -it uuv_ardusub_dev bash
-cd UnderWaterVehicle/ws/
-colcon build --packages-select rlab_customized_ros_msg control --symlink-install
-source install/setup.bash
-ros2 run control autonomous_rov_server
-```
-## Open a new terminal to run Client in uuv_ardusub_dev container 
-```
-docker exec -it uuv_ardusub_dev bash
-cd UnderWaterVehicle/ws/
-source install/setup.bash
-ros2 run control autonomous_rov_client
-```
 
 <table align='center'>
   <tr width="100%">
@@ -127,10 +97,6 @@ ros2 run control autonomous_rov_client
   </tr>
 </table> 
 
-## Building the Workspace
-```
-colcon build --symlink-install
-```
 ## Application
 #### ROS High Level Control
 #### Path Planning
