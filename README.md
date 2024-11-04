@@ -27,11 +27,11 @@ By default, BlueROV2 runs Gstream udp
 GST_PLUGIN_PATH=install/gst_bridge/lib/gst_bridge gst-launch-1.0 --gst-plugin-path=install/lib/gst_bridge/ udpsrc port=5600 ! 'application/x-rtp,encoding-name=H264,payload=96,clock-rate=90000' ! rtph264depay ! avdec_h264 ! queue leaky=1 ! decodebin ! videoconvert ! rosimagesink ros-topic="/fixposition/image" sync=false
 ```
 
-## How to run Mavros new 
+## How to run BlueRov2 Simulation 
 ```
 git clone https://github.com/dfl-rlab/UnderWaterVehicle.git
 ```
-## Build Docker Image for ArduPilot BlueROV2: 
+#### Build Docker Image for ArduPilot BlueROV2: 
 ```
 cd UnderWaterVehicle/docker
 docker build -t hub.ci.dfl.ae/roboticslab/ros2_humble_x86_no_gpu:bluerov2 -f Dockerfile_ardupilot_bluerov2 .
@@ -115,9 +115,17 @@ cd UnderWaterVehicle/ws/
 source install/setup.bash
 ros2 run control autonomous_rov_client
 ```
-<p align='center'>
-    <img src="https://github.com/dfl-rlab/documentation_materials/blob/master/uuv/uuv_snail.png" width="780" height="560"/>
-</p>
+
+<table align='center'>
+  <tr width="100%">
+    <td width="50%"><img src="https://github.com/dfl-rlab/documentation_materials/blob/master/uuv/uuv_snail.png" width="400" height="260"/><p align='center'>a</p></td>
+    <td width="50%"><img src="https://github.com/dfl-rlab/documentation_materials/blob/master/uuv/uuv_snail.png" width="400" height="260"/><p align='center'>b</p></td>
+  </tr>
+  <tr width="100%">
+    <td width="50%"><img src="https://github.com/dfl-rlab/documentation_materials/blob/master/uuv/uuv_snail.png" width="400" height="260"/><p align='center'>c</p></td>
+    <td width="50%"><img src="https://github.com/dfl-rlab/documentation_materials/blob/master/uuv/uuv_snail.png" width="400" height="260"/><p align='center'>d</p></td>
+  </tr>
+</table> 
 
 ## Building the Workspace
 ```
