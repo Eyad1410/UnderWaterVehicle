@@ -76,7 +76,7 @@ cd UnderWaterVehicle/ws/
 source install/setup.bash
 ros2 run control_as autonomous_rov_client.py
 ```
-## Testing Action Client Goals 
+## Testing Action Client Goal 
 ### Snail Pattern Movement:
 ```
 ros2 action send_goal /snail_pattern rlab_customized_ros_msg/action/SnailPattern \
