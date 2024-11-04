@@ -118,12 +118,12 @@ ros2 run control autonomous_rov_client
 
 <table align='center'>
   <tr width="100%">
-    <td width="50%"><img src="https://github.com/dfl-rlab/documentation_materials/blob/master/uuv/uuv_snail.png" width="400" height="260"/><p align='center'>a</p></td>
-    <td width="50%"><img src="https://github.com/dfl-rlab/documentation_materials/blob/master/uuv/uuv_snail.png" width="400" height="260"/><p align='center'>b</p></td>
+    <td width="50%"><img src="https://github.com/dfl-rlab/documentation_materials/blob/master/uuv/uuv_snail_1.0_mps.png" width="400" height="260"/><p align='center'>uuv_snail pattern 1.0 m/s</p></td>
+    <td width="50%"><img src="https://github.com/dfl-rlab/documentation_materials/blob/master/uuv/uuv_snail_1.5_mps.png" width="400" height="260"/><p align='center'>uuv_snail pattern 1.5 m/s</p></td>
   </tr>
   <tr width="100%">
-    <td width="50%"><img src="https://github.com/dfl-rlab/documentation_materials/blob/master/uuv/uuv_snail.png" width="400" height="260"/><p align='center'>c</p></td>
-    <td width="50%"><img src="https://github.com/dfl-rlab/documentation_materials/blob/master/uuv/uuv_snail.png" width="400" height="260"/><p align='center'>d</p></td>
+    <td width="50%"><img src="https://github.com/dfl-rlab/documentation_materials/blob/master/uuv/uuv_snail_2.0_mps.png" width="400" height="260"/><p align='center'>uuv_snail pattern 2.0 m/s</p></td>
+    <td width="50%"><img src="https://github.com/dfl-rlab/documentation_materials/blob/master/uuv/uuv_snail_2.0_mps_v2.png" width="400" height="260"/><p align='center'>uuv_snail pattern 2.0 m/s 2nd attempt</p></td>
   </tr>
 </table> 
 
