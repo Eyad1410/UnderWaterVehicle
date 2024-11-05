@@ -43,6 +43,7 @@ install(PROGRAMS
   scripts/test.py
   scripts/move_to_action_client.py
   scripts/move_to_action_server.py
+  scripts/autonomous_controller.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
