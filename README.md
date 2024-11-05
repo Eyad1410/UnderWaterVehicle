@@ -95,7 +95,7 @@ ros2 run control_as autonomous_rov_client.py
    To test movements like the Snail Pattern, use this action goal:
 ```
 ros2 action send_goal /snail_pattern rlab_customized_ros_msg/action/SnailPattern \
-"{initial_side_length: 2.0, increment: 2.0, max_side_length: 10.0}"
+"{initial_side_length: 2.0, increment: 2.0, max_side_length: 20.0}"
 ```
 --------------------------------------------------------------------
 # Snail Pattern Trajectories at Different Speeds for BlueROV2
