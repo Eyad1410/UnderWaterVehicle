@@ -1,0 +1,9 @@
+# Goal (request from the client)
+geometry_msgs/PoseStamped target_pose
+#int32 repeat_count  # Add this to specify how many times to repeat the movement
+---
+# Result definition
+bool success                  # Indicates if the pattern was completed successfully
+---
+# Feedback definition
+float32 progress              # Progress percentage of the pose

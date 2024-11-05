@@ -40,6 +40,9 @@ install(PROGRAMS
 
   scripts/autonomous_rov_client.py
   scripts/autonomous_rov_controller.py
+  scripts/test.py
+  scripts/move_to_action_client.py
+  scripts/move_to_action_server.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
