@@ -1,0 +1,175 @@
+#docker build -t hub.ci.dfl.ae/roboticslab/ros2_humble_x86_no_gpu:bluerov2 -f Dockerfile_ardupilot_bluerov2 .
+FROM ubuntu:22.04 AS base
+
+ARG USERNAME=bluerov2
+ARG USER_UID=1000
+ARG USER_GID=$USER_UID
+ARG DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get upgrade -y
+
+# Install language
+RUN apt-get update \
+  && apt-get -y --quiet --no-install-recommends install \
+    locales \
+  && locale-gen en_US.UTF-8 \
+  && update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8 \
+  && rm -rf /var/lib/apt/lists/*
+ENV LANG=en_US.UTF-8
+
+# Install timezone
+RUN ln -fs /usr/share/zoneinfo/UTC /etc/localtime \
+  && apt-get update \
+  && apt-get -y --quiet --no-install-recommends install \
+     tzdata \
+  && dpkg-reconfigure --frontend noninteractive tzdata \
+  && rm -rf /var/lib/apt/lists/*
+
+# Install a few handy tools
+RUN apt-get update \
+  && apt-get -y --quiet --no-install-recommends install \
+    bash-completion \
+    build-essential \
+    git \
+    glmark2 \
+    gnupg \
+    iputils-ping \
+    lsb-release \
+    mlocate \
+    software-properties-common \
+    sudo \
+    wget \
+    vim \
+  && rm -rf /var/lib/apt/lists/*
+
+# Install NVIDIA software
+RUN apt-get update \
+ && apt-get -y --quiet --no-install-recommends install \
+    libglvnd0 \
+    libgl1 \
+    libglx0 \
+    libegl1 \
+    libxext6 \
+    libx11-6 \
+  && rm -rf /var/lib/apt/lists/* \
+ENV NVIDIA_VISIBLE_DEVICES=all
+ENV NVIDIA_DRIVER_CAPABILITIES=graphics,utility,compute
+ENV QT_X11_NO_MITSHM=1
+
+# Install Gazebo Harmonic
+RUN apt update &&  apt install -y curl
+RUN curl https://packages.osrfoundation.org/gazebo.gpg --output /usr/share/keyrings/pkgs-osrf-archive-keyring.gpg
+RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/pkgs-osrf-archive-keyring.gpg] http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/gazebo-stable.list > /dev/null
+RUN apt-get update \
+  && apt-get -y --quiet --no-install-recommends install \
+    gz-harmonic \
+  && rm -rf /var/lib/apt/lists/*
+
+# --- ROS2 Humble Installation
+RUN locale  # check for UTF-8
+
+RUN apt update && apt install -y locales
+RUN locale-gen en_US en_US.UTF-8
+RUN update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
+
+RUN echo "export LANG=en_US.UTF-8" >> /root/.bashrc
+
+RUN locale  # verify settings
+
+RUN apt install -y software-properties-common
+RUN add-apt-repository universe
+RUN curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg
+
+RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(. /etc/os-release && echo $UBUNTU_CODENAME) main" | tee /etc/apt/sources.list.d/ros2.list > /dev/null
+
+RUN apt-get update && apt-get install -y git
+
+RUN apt install -y ros-humble-desktop
+
+# Install colcon
+RUN apt install -y python3-colcon-common-extensions
+# --- Humble has been installed
+
+# Install some ardupilot and ardupilot_gazebo prereqs
+RUN apt-get update \
+ && apt-get -y --quiet --no-install-recommends install \
+    python3-wxgtk4.0 \
+    rapidjson-dev \
+    xterm \
+  && rm -rf /var/lib/apt/lists/*
+
+# Create a non-root user
+# Required for ArduSub install, but generally a good idea
+RUN groupadd --gid $USER_GID $USERNAME \
+  && useradd -s /bin/bash --uid $USER_UID --gid $USER_GID -m $USERNAME \
+  && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
+  && chmod 0440 /etc/sudoers.d/$USERNAME \
+  && echo "\n# Added by bluerov2_ignition Dockerfile:" >> /home/$USERNAME/.bashrc \
+  && echo "source /usr/share/bash-completion/completions/git" >> /home/$USERNAME/.bashrc
+
+# Switch to our new user
+USER $USERNAME
+ENV USER=$USERNAME
+
+# Clone ArduSub code
+WORKDIR /home/$USERNAME
+RUN /bin/bash -c "git clone https://github.com/ArduPilot/ardupilot.git --recurse-submodules && cd ardupilot && git checkout a6f00a34b118ffa13ab1e36901c1e2d5c9000e74"
+
+# Install ArduSub prereqs (this also appends to .bashrc)
+WORKDIR /home/$USERNAME/ardupilot
+ENV SKIP_AP_EXT_ENV=1 SKIP_AP_GRAPHIC_ENV=1 SKIP_AP_COV_ENV=1 SKIP_AP_GIT_CHECK=1
+RUN Tools/environment_install/install-prereqs-ubuntu.sh -y
+
+# Build ArduSub
+# Note: waf will capture all of the environment variables in ardupilot/.lock-waf_linux_build.
+# Any change to enviroment variables will cause a re-build.
+# To avoid this call sim_vehicle.py with the "--no-rebuild" option.
+WORKDIR /home/$USERNAME/ardupilot
+RUN modules/waf/waf-light configure --board sitl \
+  && modules/waf/waf-light build --target bin/ardusub
+
+# Clone ardupilot_gazebo code
+WORKDIR /home/$USERNAME
+RUN git clone https://github.com/ArduPilot/ardupilot_gazebo.git
+
+RUN sudo apt install -y libopencv-dev
+RUN sudo apt-get install -y libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libgstreamer-plugins-bad1.0-dev gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav gstreamer1.0-tools gstreamer1.0-x gstreamer1.0-alsa gstreamer1.0-gl gstreamer1.0-gtk3 gstreamer1.0-qt5 gstreamer1.0-pulseaudio
+
+# Build ardupilot_gazebo
+RUN [ "/bin/bash" , "-c" , " \
+  cd ardupilot_gazebo && git checkout 2baeeeccf30b9101f0fe300993ca6b1c785630ca \
+  && mkdir build \
+  && cd build \
+  && cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+  && make -j9" ]
+
+RUN pip3 install matplotlib
+
+#mavros
+RUN sudo apt install -y ros-humble-mavros-msgs
+RUN sudo apt install -y libasio-dev ros-humble-mavlink ros-humble-geographic-msgs libeigen-stl-containers-dev ros-humble-diagnostic-updater libgeographic-dev
+RUN bash -c "cd /tmp && git clone https://github.com/geographiclib/geographiclib.git && cd geographiclib && mkdir build && cd build && cmake .. -DCMAKE_BUILD_TYPE=Release && sudo make install"
+RUN bash -c "cd /tmp && git clone https://github.com/mavlink/mavros.git && sudo ./mavros/mavros/scripts/install_geographiclib_datasets.sh"
+RUN bash -c "sudo ln -s /usr/local/share/GeographicLib /usr/share/GeographicLib"
+
+RUN /bin/bash -c "cd /home/$USERNAME && mkdir -p ws/src && cd ws/src && git clone https://github.com/clydemcqueen/bluerov2_ignition.git --recurse-submodules && cd bluerov2_ignition && git checkout 9ec0350ca04206c3fc124f602b8bd19425b9fb75"
+RUN /bin/bash -c "cd ws/src && git clone https://github.com/mavlink/mavros.git --recurse-submodules && cd mavros && git checkout b49095727a6ff160e1e913b90a4ce50e383e8863"
+RUN /bin/bash -c "cd ws && source /opt/ros/humble/setup.bash && colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release"
+
+# Set up the environment
+WORKDIR /home/$USERNAME
+RUN echo "export PATH=/home/$USERNAME/.local/bin:\$PATH" >> /home/$USERNAME/.bashrc \
+  && echo "export PATH=/home/$USERNAME/.local/lib/python3.10/site-packages:\$PATH" >> /home/$USERNAME/.bashrc \
+  && echo "export GZ_SIM_SYSTEM_PLUGIN_PATH=/home/$USERNAME/ardupilot_gazebo/build" >> /home/$USERNAME/.bashrc \
+  && echo "export GZ_SIM_RESOURCE_PATH=/home/$USERNAME/ws/src/bluerov2_ignition/models:/home/$USERNAME/ws/src/bluerov2_ignition/worlds" >> /home/$USERNAME/.bashrc
+
+#utils
+RUN sudo apt install -y nano net-tools htop
+
+#copy apm with udp
+COPY apm.launch /home/bluerov2/ws/src/mavros/mavros/launch
+
+#copy rtps
+COPY rtps_udp_profile.xml /home/$USERNAME
+
+#RUN echo "echo \$ROS_DOMAIN_ID \$GZ_SIM_RESOURCE_PATH" >> /home/$USERNAME/haha.bash

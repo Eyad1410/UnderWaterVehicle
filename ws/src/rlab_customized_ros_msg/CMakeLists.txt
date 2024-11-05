@@ -27,7 +27,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "action/VLocalization.action"
   "action/TagDocking.action"
   "action/PreContact.action"
-  "action/MoveToPose.action"
+  "action/SnailPattern.action"
   DEPENDENCIES builtin_interfaces geometry_msgs std_msgs action_msgs nav_msgs
 )
 
