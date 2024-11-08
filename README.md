@@ -65,6 +65,7 @@ ros2 run mavros_local_odom_tf local_odom2tf
 ```
 - ### **Run Rviz2:**
 ```
+docker start uuv_ardusub_dev
 docker exec -it uuv_ardusub_dev bash
 cd UnderWaterVehicle/ws/
 source /opt/ros/humble/setup.bash
