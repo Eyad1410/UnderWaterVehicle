@@ -26,6 +26,24 @@ By default, BlueROV2 runs Gstream udp
 ```
 GST_PLUGIN_PATH=install/gst_bridge/lib/gst_bridge gst-launch-1.0 --gst-plugin-path=install/lib/gst_bridge/ udpsrc port=5600 ! 'application/x-rtp,encoding-name=H264,payload=96,clock-rate=90000' ! rtph264depay ! avdec_h264 ! queue leaky=1 ! decodebin ! videoconvert ! rosimagesink ros-topic="/fixposition/image" sync=false
 ```
+
+# Docker Image Qground_control 
+
+### Clone the UnderWaterVehicle Repository
+```
+git clone https://github.com/dfl-rlab/UnderWaterVehicle.git
+```
+- ### **To build the Docker image for QGroundControl**
+   navigate to /docker/qground directory and build the image: 
+```
+cd UnderWaterVehicle/docker/qground
+docker build -t qgc_ubuntu_no_gpu -f Dockerfile_qground_bluerov2 .
+```
+- ### **run the container, using this command:**
+```
+./run.bash
+ ```
+
 # BlueROV2 Simulation Setup Guide
 
 ### Clone the UnderWaterVehicle Repository:
