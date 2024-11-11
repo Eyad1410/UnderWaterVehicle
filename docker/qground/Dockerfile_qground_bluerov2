@@ -1,0 +1,46 @@
+#docker build -t qgc_ubuntu_no_gpu -f Dockerfile_qground_bluerov2 .
+
+FROM ubuntu:22.04
+
+# Set environment variables
+ENV DEBIAN_FRONTEND=noninteractive
+ENV QGC_VERSION="latest"
+
+# Update and install necessary libraries and dependencies in a single layer
+RUN apt-get update && apt-get install -y \
+    libx11-xcb1 libxcomposite1 libxdamage1 libxfixes3 libxi6 libxtst6 libxrandr2 \
+    libxcb-util1 libxcb-glx0 libxcb-keysyms1 libxcb-image0 libxcb-shm0 libxcb-icccm4 \
+    libxcb-xkb1 libxcb-render-util0 libxcb-xfixes0 libxcb-randr0 libxcb-shape0 \
+    libxcb-sync1 libxcb-xinerama0 libxrender1 libfontconfig1 libfreetype6 \
+    libgl1-mesa-glx libdbus-1-3 gstreamer1.0-plugins-base gstreamer1.0-plugins-good \
+    gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav \
+    gstreamer1.0-gl libpulse0 libpulse-mainloop-glib0 libxkbcommon-x11-0 \
+    libxcb1 libxext6 libx11-6 libgstreamer-plugins-base1.0-dev libgstreamer1.0-dev \
+    wget && \
+    rm -rf /var/lib/apt/lists/*
+
+# Download and Extract the QGroundControl AppImage
+RUN wget https://d176tv9ibo4jno.cloudfront.net/$QGC_VERSION/QGroundControl.AppImage -O /tmp/QGroundControl.AppImage && \
+    chmod +x /tmp/QGroundControl.AppImage && \
+    /tmp/QGroundControl.AppImage --appimage-extract && \
+    mv squashfs-root /opt/QGroundControl && \
+    rm /tmp/QGroundControl.AppImage
+
+# Create a non-root user
+RUN useradd -m -s /bin/bash qgcuser
+
+# Change ownership and permissions of the QGroundControl directory
+RUN chown -R qgcuser:qgcuser /opt/QGroundControl && chmod +x /opt/QGroundControl/AppRun
+
+# Add qgcuser to dialout group for serial port access
+RUN usermod -aG dialout qgcuser
+
+# Switch to the non-root user
+USER qgcuser
+
+# Set the working directory and run QGroundControl
+WORKDIR /opt/QGroundControl
+ENTRYPOINT ["./AppRun"]
+
+# Volume for persistent data
+VOLUME /home/qgcuser/.config/QGroundControl
