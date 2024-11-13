@@ -55,7 +55,7 @@ git clone https://github.com/dfl-rlab/UnderWaterVehicle.git
 - ### **Build Docker Image for ArduPilot BlueROV2**  
    Navigate to the Docker directory and build the image:           
 ```
-cd UnderWaterVehicle/docker
+cd UnderWaterVehicle/docker/ardusub
 docker build -t hub.ci.dfl.ae/roboticslab/ros2_humble_x86_no_gpu:bluerov2 -f Dockerfile_ardupilot_bluerov2 .
 ```
 - ### **Start the Container Environment**         
