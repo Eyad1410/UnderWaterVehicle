@@ -169,7 +169,4 @@ RUN sudo apt install -y nano net-tools htop
 #copy apm with udp
 COPY apm.launch /home/bluerov2/ws/src/mavros/mavros/launch
 
-#copy rtps
-COPY rtps_udp_profile.xml /home/$USERNAME
-
 #RUN echo "echo \$ROS_DOMAIN_ID \$GZ_SIM_RESOURCE_PATH" >> /home/$USERNAME/haha.bash
