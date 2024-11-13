@@ -16,6 +16,7 @@ services:
       - "/dev:/dev"
       - "/run/user:/run/user"
       - "/tmp/.X11-unix:/tmp/.X11-unix:rw"
+      - "${HOME}/UnderWaterVehicle:/UnderWaterVehicle"
 
   uuv_ardusub_gazebo:
     image: hub.ci.dfl.ae/roboticslab/ros2_humble_x86_no_gpu:bluerov2
@@ -31,6 +32,7 @@ services:
       - "/dev:/dev"
       - "/run/user:/run/user"
       - "/tmp/.X11-unix:/tmp/.X11-unix:rw"
+      - "${HOME}/UnderWaterVehicle:/UnderWaterVehicle"
       
   uuv_ardusub_simulator_apm:
     image: hub.ci.dfl.ae/roboticslab/ros2_humble_x86_no_gpu:bluerov2
@@ -45,6 +47,7 @@ services:
     volumes:
       - "/dev:/dev"
       - "/tmp/.X11-unix:/tmp/.X11-unix:rw"
+      - "${HOME}/UnderWaterVehicle:/UnderWaterVehicle"
 
   #uuv_ardusub_dev:
   #  image: hub.ci.dfl.ae/roboticslab/ros2_humble_x86_no_gpu:bluerov2
