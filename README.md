@@ -96,7 +96,7 @@ rviz2
    Start the controller to handle navigation and movement commands:
 ```
 docker exec -it uuv_ardusub_dev bash
-cd UnderWaterVehicle/ws/
+cd /UnderWaterVehicle/ws
 source install/setup.bash
 ros2 run control_as autonomous_rov_controller.py
 ```
