@@ -61,7 +61,7 @@ docker build -t hub.ci.dfl.ae/roboticslab/ros2_humble_x86_no_gpu:bluerov2 -f Doc
 - ### **Start the Container Environment**         
    Use Docker Compose to launch the environment:
 ```
-cd UnderWaterVehicle/docker
+cd UnderWaterVehicle/docker/ardusub
 docker compose -f uuv-dev.yaml up
 ```
 
