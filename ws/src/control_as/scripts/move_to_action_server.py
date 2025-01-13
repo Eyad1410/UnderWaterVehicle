@@ -10,11 +10,10 @@ from mavros_msgs.srv import CommandBool, SetMode
 from rlab_customized_ros_msg.action import MoveTo
 import math
 import time
-import json
 
 
 class MoveToActionServer(Node):
-    def __init__(self, json_file_path):
+    def __init__(self):
         super().__init__('move_to_action_server')
 
         # Publishers and Subscribers
@@ -36,19 +35,10 @@ class MoveToActionServer(Node):
         self.set_mode("GUIDED")
 
         # State Variables
-        self.current_x = 0.0
-        self.current_y = 0.0
-        self.current_z = 0.0
-        self.target_x = None
-        self.target_y = None
-        self.target_z = None
-        self.goal_reached_threshold = 0.1  # Adjusted for closer accuracy
-        self.goal_timeout = 30000.0
-
-        # Load Positions from JSON File
-        self.positions = self.load_positions(json_file_path)
-        self.current_position_index = 0
-        self.current_goal = None
+        self.current_position = None
+        self.target_position = None
+        self.goal_reached_threshold = 0.05  # Distance threshold in meters
+        self.goal_timeout = 3000.0  # Timeout in seconds
 
         # Action Server for MoveTo goals
         self.action_server = ActionServer(
@@ -60,84 +50,34 @@ class MoveToActionServer(Node):
             cancel_callback=self.cancel_callback
         )
 
-        # Timer for JSON-based goal processing
-        self.timer = self.create_timer(0.1, self.process_json_goals)
-
-    def load_positions(self, file_path):
-        """Load positions from a JSON file."""
-        try:
-            with open(file_path, 'r') as file:
-                data = json.load(file).get("positions", [])
-                self.get_logger().info(f"Loaded {len(data)} positions from {file_path}")
-                return data
-        except Exception as e:
-            self.get_logger().error(f"Failed to load positions from {file_path}: {e}")
-            return []
+        self.get_logger().info("MoveTo Action Server is ready to accept goals.")
 
     def odom_callback(self, msg):
         """Update the current position using odometry feedback."""
-        self.current_x = msg.pose.pose.position.x
-        self.current_y = msg.pose.pose.position.y
-        self.current_z = msg.pose.pose.position.z
-
-    def process_json_goals(self):
-        """Handle JSON-driven goal execution."""
-        if self.current_position_index >= len(self.positions):
-            self.get_logger().info("All positions processed.")
-            return
-
-        # Check if the current goal is reached
-        if self.current_goal and self.is_goal_reached():
-            self.get_logger().info(f"Goal reached: {self.current_goal}")
-            self.current_position_index += 1
-            self.current_goal = None
-
-        # Publish the next position if no active goal
-        if not self.current_goal and self.current_position_index < len(self.positions):
-            self.current_goal = self.positions[self.current_position_index]
-            self.set_target_position(
-                self.current_goal.get("x", 0.0),
-                self.current_goal.get("y", 0.0),
-                self.current_goal.get("z", 0.0)
-            )
-
-        # Continuously display current target and distance
-        self.log_target_and_distance()
+        self.current_position = msg.pose.pose.position
+        self.get_logger().info(
+            f"Current Position: x={self.current_position.x:.2f}, y={self.current_position.y:.2f}, z={self.current_position.z:.2f}"
+        )
 
     def set_target_position(self, x, y, z):
         """Set a new target position."""
-        self.target_x = x
-        self.target_y = y
-        self.target_z = z
-        pose = PoseStamped()
-        pose.header.frame_id = "map"
-        pose.pose.position.x = x
-        pose.pose.position.y = y
-        pose.pose.position.z = z
-        pose.pose.orientation.w = 1.0
-        self.position_publisher.publish(pose)
+        self.target_position = PoseStamped()
+        self.target_position.header.frame_id = "map"
+        self.target_position.pose.position.x = x
+        self.target_position.pose.position.y = y
+        self.target_position.pose.position.z = z
+        self.target_position.pose.orientation.w = 1.0
 
     def is_goal_reached(self):
         """Check if the ROV has reached the target position."""
-        if self.target_x is None or self.target_y is None or self.target_z is None:
+        if not self.target_position or not self.current_position:
             return False
-        dist_x = self.target_x - self.current_x
-        dist_y = self.target_y - self.current_y
-        dist_z = self.target_z - self.current_z
+        dist_x = self.target_position.pose.position.x - self.current_position.x
+        dist_y = self.target_position.pose.position.y - self.current_position.y
+        dist_z = self.target_position.pose.position.z - self.current_position.z
         distance = math.sqrt(dist_x**2 + dist_y**2 + dist_z**2)
+        self.get_logger().info(f"Distance to Target: {distance:.2f} meters")
         return distance < self.goal_reached_threshold
-
-    def log_target_and_distance(self):
-        """Continuously log the target position and distance."""
-        if self.target_x is not None and self.target_y is not None and self.target_z is not None:
-            dist_x = self.target_x - self.current_x
-            dist_y = self.target_y - self.current_y
-            dist_z = self.target_z - self.current_z
-            distance = math.sqrt(dist_x**2 + dist_y**2 + dist_z**2)
-            self.get_logger().info(
-                f"Current Target: x={self.target_x}, y={self.target_y}, z={self.target_z} | "
-                f"Distance to Target: {distance:.2f} meters"
-            )
 
     def goal_callback(self, goal_request):
         """Handle incoming MoveTo action requests."""
@@ -147,42 +87,39 @@ class MoveToActionServer(Node):
     def cancel_callback(self, goal_handle):
         """Handle MoveTo action goal cancellation."""
         self.get_logger().info("MoveTo goal cancellation request received.")
-        goal_handle.cancel()
         return CancelResponse.ACCEPT
 
     def execute_move_to_callback(self, goal_handle):
         """Execute MoveTo action goals."""
         target_pose = goal_handle.request.target_pose
-        self.target_x = target_pose.pose.position.x
-        self.target_y = target_pose.pose.position.y
-        self.target_z = target_pose.pose.position.z
-        self.get_logger().info(f"Executing MoveTo goal: x={self.target_x}, y={self.target_y}, z={self.target_z}")
+        self.set_target_position(
+            target_pose.pose.position.x,
+            target_pose.pose.position.y,
+            target_pose.pose.position.z
+        )
+        self.get_logger().info(
+            f"Moving to Target: x={self.target_position.pose.position.x:.2f}, "
+            f"y={self.target_position.pose.position.y:.2f}, z={self.target_position.pose.position.z:.2f}"
+        )
 
         start_time = time.time()
         while not self.is_goal_reached():
-            self.log_target_and_distance()
-            self.publish_target_position()
+            if goal_handle.is_cancel_requested:
+                self.get_logger().info("MoveTo goal canceled.")
+                goal_handle.abort()
+                return MoveTo.Result(success=False)
+
+            self.position_publisher.publish(self.target_position)  # Continuously publish target position
             rclpy.spin_once(self, timeout_sec=0.1)
 
             if time.time() - start_time > self.goal_timeout:
                 self.get_logger().info("MoveTo goal timed out.")
                 goal_handle.abort()
-                return MoveTo.Result()
+                return MoveTo.Result(success=False)
 
+        self.get_logger().info("Goal reached successfully.")
         goal_handle.succeed()
-        self.get_logger().info("MoveTo goal completed successfully.")
-        return MoveTo.Result()
-
-    def publish_target_position(self):
-        """Continuously publish the target position."""
-        if self.target_x is not None and self.target_y is not None and self.target_z is not None:
-            pose = PoseStamped()
-            pose.header.frame_id = "map"
-            pose.pose.position.x = self.target_x
-            pose.pose.position.y = self.target_y
-            pose.pose.position.z = self.target_z
-            pose.pose.orientation.w = 1.0
-            self.position_publisher.publish(pose)
+        return MoveTo.Result(success=True)
 
     def arm_rov(self):
         """Arm the ROV."""
@@ -195,7 +132,7 @@ class MoveToActionServer(Node):
         if future.result() and future.result().success:
             self.get_logger().info("ROV armed successfully.")
         else:
-            self.get_logger().info("Failed to arm the ROV.")
+            self.get_logger().error("Failed to arm the ROV.")
 
     def set_mode(self, mode):
         """Set the ROV's mode."""
@@ -208,13 +145,12 @@ class MoveToActionServer(Node):
         if future.result() and future.result().mode_sent:
             self.get_logger().info(f"Mode set to {mode}.")
         else:
-            self.get_logger().info(f"Failed to set mode to {mode}.")
+            self.get_logger().error(f"Failed to set mode to {mode}.")
 
 
 def main(args=None):
     rclpy.init(args=args)
-    json_file_path = "/UnderWaterVehicle/ws/src/control_as/scripts/positions.json"
-    move_to_action_server = MoveToActionServer(json_file_path)
+    move_to_action_server = MoveToActionServer()
     rclpy.spin(move_to_action_server)
     move_to_action_server.destroy_node()
     rclpy.shutdown()

@@ -3,32 +3,30 @@
 import rclpy
 from rclpy.node import Node
 from rclpy.executors import MultiThreadedExecutor
-from rclpy.callback_groups import ReentrantCallbackGroup
-from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy
+from rclpy.qos import QoSProfile, ReliabilityPolicy, HistoryPolicy
 from rclpy.action import ActionClient
-from mavros_msgs.srv import CommandBool, SetMode
 from mavros_msgs.msg import State
 from sensor_msgs.msg import BatteryState
-from geometry_msgs.msg import PoseStamped
 from std_msgs.msg import String
+from geometry_msgs.msg import PoseStamped
 from rlab_customized_ros_msg.action import MoveTo, SnailPattern
-import json
-import math
-import time
+
 
 class ActionClientBase:
-    def __init__(self, node, action_type, action_name):
-        self.node = node
-        self.action_client = ActionClient(node, action_type, action_name, callback_group=ReentrantCallbackGroup())
+    def __init__(self, action_client):
+        self.action_client = action_client
         self.goal_status = -1
         self._is_done = True
         self.goal_handle = None
-        self.node.get_logger().info(f"{action_name}: Waiting for server...")
-        self.action_client.wait_for_server()
-        self.node.get_logger().info(f"{action_name}: Server ready.")
-    
+        self.logger = rclpy.logging.get_logger(self.action_client._action_name)
+        self.logger.info(f"{self.action_client._action_name}: Waiting for server...")
+        if not self.action_client.wait_for_server(timeout_sec=5.0):
+            self.logger.error(f"{self.action_client._action_name}: Server unavailable.")
+        else:
+            self.logger.info(f"{self.action_client._action_name}: Server ready.")
+
     def execute_goal(self, goal):
-        self.node.get_logger().info(f"{self.__class__.__name__}: Executing goal.")
+        self.logger.info(f"Executing goal for {self.action_client._action_name}.")
         self._is_done = False
         self.goal_status = -1
         self.send_goal_future = self.action_client.send_goal_async(goal, feedback_callback=self.feedback_callback)
@@ -37,11 +35,11 @@ class ActionClientBase:
     def goal_response_callback(self, future):
         goal_handle = future.result()
         if not goal_handle.accepted:
-            self.node.get_logger().info(f"{self.__class__.__name__}: Goal rejected")
+            self.logger.warning(f"Goal for {self.action_client._action_name} rejected.")
             self._is_done = True
             return
 
-        self.node.get_logger().info(f"{self.__class__.__name__}: Goal accepted")
+        self.logger.info(f"Goal for {self.action_client._action_name} accepted.")
         self.goal_handle = goal_handle
         self.get_result_future = goal_handle.get_result_async()
         self.get_result_future.add_done_callback(self.result_callback)
@@ -50,12 +48,12 @@ class ActionClientBase:
         self.goal_status = future.result().status
         self._is_done = True
         if self.goal_status == 4:
-            self.node.get_logger().info(f"{self.__class__.__name__}: Goal succeeded.")
+            self.logger.info(f"Goal for {self.action_client._action_name} succeeded.")
         elif self.goal_status == 6:
-            self.node.get_logger().info(f"{self.__class__.__name__}: Goal failed.")
+            self.logger.warning(f"Goal for {self.action_client._action_name} failed.")
 
     def feedback_callback(self, feedback_msg):
-        self.node.get_logger().info(f"{self.__class__.__name__} feedback: {feedback_msg.feedback.progress * 100:.2f}%")
+        self.logger.info(f"{self.action_client._action_name} feedback: {feedback_msg.feedback.progress * 100:.2f}%")
 
     def is_done(self):
         return self._is_done
@@ -65,51 +63,17 @@ class ActionClientBase:
 
     def cancel_goal(self):
         if self.goal_handle is not None:
-            self.node.get_logger().warn(f"{self.__class__.__name__}: Cancelling goal.")
+            self.logger.warning(f"Cancelling goal for {self.action_client._action_name}.")
             cancel_future = self.goal_handle.cancel_goal_async()
             cancel_future.add_done_callback(self.cancel_done_callback)
 
     def cancel_done_callback(self, future):
         cancel_response = future.result()
         if len(cancel_response.goals_canceling) > 0:
-            self.node.get_logger().warn(f"{self.__class__.__name__}: Goal successfully cancelled.")
+            self.logger.info(f"Goal for {self.action_client._action_name} successfully cancelled.")
         else:
-            self.node.get_logger().warn(f"{self.__class__.__name__}: Goal could not be cancelled.")
+            self.logger.warning(f"Goal for {self.action_client._action_name} could not be cancelled.")
         self._is_done = True
-
-    def reset(self):
-        """Reset the state of the action client."""
-        self.goal_status = -1
-        self._is_done = True
-        self.goal_handle = None
-        self.node.get_logger().info(f"Action client {self.action_client._action_name} has been reset.")
-
-
-class MoveToClient(ActionClientBase):
-    def __init__(self, node):
-        super().__init__(node, MoveTo, 'move_to')
-    
-    def send_goal(self, x, y, z):
-        goal = MoveTo.Goal()
-        goal.target_pose = PoseStamped()
-        goal.target_pose.header.frame_id = "map"
-        goal.target_pose.pose.position.x = x
-        goal.target_pose.pose.position.y = y
-        goal.target_pose.pose.position.z = z
-        goal.target_pose.pose.orientation.w = 1.0
-        self.execute_goal(goal)
-
-
-class SnailPatternClient(ActionClientBase):
-    def __init__(self, node):
-        super().__init__(node, SnailPattern, 'snail_pattern')
-
-    def send_goal(self, initial_side_length, increment, max_side_length):
-        goal = SnailPattern.Goal()
-        goal.initial_side_length = initial_side_length
-        goal.increment = increment
-        goal.max_side_length = max_side_length
-        self.execute_goal(goal)
 
 
 class ROVAutonomousController(Node):
@@ -117,56 +81,37 @@ class ROVAutonomousController(Node):
         super().__init__('rov_autonomous_controller')
 
         # Initialize clients
-        self.move_to_client = MoveToClient(self)
-        self.snail_pattern_client = SnailPatternClient(self)
+        self.move_to_client = ActionClientBase(ActionClient(self, MoveTo, 'move_to'))
+        self.snail_pattern_client = ActionClientBase(ActionClient(self, SnailPattern, 'snail_pattern'))
 
         # State Variables
-        self.positions = self.load_positions("/UnderWaterVehicle/ws/src/control_as/scripts/positions.json")
-        self.current_position_index = 0
+        self.target_position = {"x": 0.0, "y": 0.0, "z": 0.0}
         self.triggered = False
         self.fsm = "FSM_IDLE"
+        self.pending_goal = False
 
-        # Setup Subscriptions and Services
-        self.setup_subscriptions_and_services()
+        # Setup Subscriptions
+        self.setup_subscriptions()
 
         # FSM Timer
         self.fsm_loop = self.create_timer(0.1, self.fsm_control_loop)
 
-    def setup_subscriptions_and_services(self):
-        """Setup subscriptions and services."""
-        # State and Battery Monitoring
+    def setup_subscriptions(self):
         qos_profile = QoSProfile(
-            reliability=QoSReliabilityPolicy.BEST_EFFORT,  # Fix QoS mismatch
-            history=QoSHistoryPolicy.KEEP_LAST,
+            reliability=ReliabilityPolicy.BEST_EFFORT,
+            history=HistoryPolicy.KEEP_LAST,
             depth=10
         )
         self.create_subscription(State, 'mavros/state', self.state_callback, qos_profile)
         self.create_subscription(BatteryState, '/mavros/battery', self.battery_callback, qos_profile)
-
-        # Task Commands
         self.create_subscription(String, '/task_command', self.task_command_callback, 10)
-
-        # MAVROS Services
-        self.arming_client = self.create_client(CommandBool, 'mavros/cmd/arming')
-        self.mode_client = self.create_client(SetMode, 'mavros/set_mode')
-
-    def load_positions(self, file_path):
-        """Load positions from a JSON file."""
-        try:
-            with open(file_path, 'r') as file:
-                positions = json.load(file).get("positions", [])
-                self.get_logger().info(f"Loaded {len(positions)} positions from {file_path}")
-                return positions
-        except Exception as e:
-            self.get_logger().error(f"Failed to load positions from {file_path}: {e}")
-            return []
 
     def task_command_callback(self, msg):
         command = msg.data.lower().strip()
         if command == "start":
-            if not self.triggered:
-                self.triggered = True
-                self.get_logger().info("Received 'start' command. FSM triggered.")
+            self.triggered = True
+            self.pending_goal = True
+            self.get_logger().info("Received 'start' command. FSM triggered.")
         elif command == "abort":
             self.triggered = False
             self.fsm = "FSM_ABORT"
@@ -181,19 +126,14 @@ class ROVAutonomousController(Node):
     def fsm_control_loop(self):
         self.get_logger().info(f"Current FSM State: {self.fsm}")
 
-        if self.fsm == "FSM_IDLE" and self.triggered:
+        if self.fsm == "FSM_IDLE" and self.triggered and self.pending_goal:
             self.fsm = "FSM_Send_MoveTo_Goal"
             self.get_logger().info("Trigger received, transitioning to FSM_Send_MoveTo_Goal")
 
         elif self.fsm == "FSM_Send_MoveTo_Goal":
-            if self.current_position_index < len(self.positions):
-                position = self.positions[self.current_position_index]
-                self.move_to_client.send_goal(position["x"], position["y"], position["z"])
-                self.get_logger().info(f"Sending MoveTo goal: {position}")
-                self.fsm = "FSM_Wait_MoveTo_Goal"
-            else:
-                self.get_logger().info("All positions processed. Returning to IDLE.")
-                self.fsm = "FSM_IDLE"
+            self.move_to_client.execute_goal(self.create_move_to_goal())
+            self.get_logger().info(f"Sending MoveTo goal: {self.target_position}")
+            self.fsm = "FSM_Wait_MoveTo_Goal"
 
         elif self.fsm == "FSM_Wait_MoveTo_Goal":
             if self.move_to_client.is_done():
@@ -201,31 +141,50 @@ class ROVAutonomousController(Node):
                     self.get_logger().info("MoveTo goal succeeded. Transitioning to SnailPattern.")
                     self.fsm = "FSM_Send_SnailPattern_Goal"
                 else:
-                    self.get_logger().warn("MoveTo goal failed. Proceeding to next position.")
-                    self.current_position_index += 1  # Increment index
-                    self.fsm = "FSM_Send_MoveTo_Goal"  # Trigger the next goal
+                    self.get_logger().warn("MoveTo goal failed. Returning to IDLE.")
+                    self.fsm = "FSM_IDLE"
+                    self.pending_goal = False
 
         elif self.fsm == "FSM_Send_SnailPattern_Goal":
-            self.snail_pattern_client.send_goal(2.0, 2.0, 4.0)  # Adjust values as needed
+            self.snail_pattern_client.execute_goal(self.create_snail_pattern_goal())
             self.get_logger().info("Sending SnailPattern goal.")
             self.fsm = "FSM_Wait_SnailPattern_Goal"
 
         elif self.fsm == "FSM_Wait_SnailPattern_Goal":
-            self.get_logger().info(f"Waiting for SnailPattern goal to finish... FSM state: {self.fsm}")
+            self.get_logger().info("Waiting for SnailPattern goal to finish...")
             if self.snail_pattern_client.is_done():
                 if self.snail_pattern_client.is_succeeded():
-                    self.get_logger().info("SnailPattern goal succeeded. Moving to next position.")
-                    self.current_position_index += 1  # Increment index after completing the pattern
+                    self.get_logger().info("SnailPattern goal succeeded. Returning to IDLE.")
                 else:
-                    self.get_logger().warn("SnailPattern goal failed. Proceeding to next position.")
-                self.fsm = "FSM_Send_MoveTo_Goal"  # Ensure transition to next goal
+                    self.get_logger().warn("SnailPattern goal failed. Returning to IDLE.")
+                self.fsm = "FSM_IDLE"
+                self.pending_goal = False
 
         elif self.fsm == "FSM_ABORT":
-            self.get_logger().warn("Aborting all active goals.")
             self.move_to_client.cancel_goal()
             self.snail_pattern_client.cancel_goal()
             self.triggered = False
+            self.pending_goal = False
             self.fsm = "FSM_IDLE"
+
+    def create_move_to_goal(self):
+        """Create and return a MoveTo goal."""
+        goal = MoveTo.Goal()
+        goal.target_pose = PoseStamped()
+        goal.target_pose.header.frame_id = "map"
+        goal.target_pose.pose.position.x = self.target_position["x"]
+        goal.target_pose.pose.position.y = self.target_position["y"]
+        goal.target_pose.pose.position.z = self.target_position["z"]
+        goal.target_pose.pose.orientation.w = 1.0
+        return goal
+
+    def create_snail_pattern_goal(self):
+        """Create and return a SnailPattern goal."""
+        goal = SnailPattern.Goal()
+        goal.initial_side_length = 2.0
+        goal.increment = 2.0
+        goal.max_side_length = 4.0
+        return goal
 
 
 def main(args=None):
@@ -243,6 +202,3 @@ def main(args=None):
 
 if __name__ == '__main__':
     main()
-
-
-

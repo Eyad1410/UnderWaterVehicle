@@ -14,6 +14,7 @@ class AutonomousROVClient(Node):
         self.timer = self.create_timer(1.0, self.timer_cb)
         self.counter = 0
         self._goal_handle = None  # Store the goal handle to use for canceling
+        self.snail_pattern_completed = False  # Custom variable to track process completion
 
     def timer_cb(self):
         self.counter += 1
@@ -42,7 +43,7 @@ class AutonomousROVClient(Node):
         goal_msg = SnailPattern.Goal()
         goal_msg.initial_side_length = 2.0
         goal_msg.increment = 2.0
-        goal_msg.max_side_length = 20.0
+        goal_msg.max_side_length = 2.0
 
         self.get_logger().info(f'Sending SnailPattern goal: {goal_msg}')
         self._send_goal_future = self._action_client.send_goal_async(goal_msg, feedback_callback=self.feedback_callback)
@@ -67,8 +68,11 @@ class AutonomousROVClient(Node):
         result = future.result().result
         if result.success:
             self.get_logger().info('Goal succeeded')
+            self.snail_pattern_completed = True  # Set variable to True on success
         else:
             self.get_logger().info('Goal failed')
+            self.snail_pattern_completed = False  # Optionally reset if needed
+
         # Reset and send a new goal after each result
         self.reset_and_send_goal()
 
@@ -76,7 +80,8 @@ class AutonomousROVClient(Node):
         """Reset the client state and send a new goal."""
         self._goal_handle = None
         self.counter = 0  # Reset counter
-        self.send_goal()
+        if not self.snail_pattern_completed:
+            self.send_goal()
 
 def main(args=None):
     rclpy.init(args=args)
@@ -86,3 +91,4 @@ def main(args=None):
 
 if __name__ == '__main__':
     main()
+
