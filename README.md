@@ -43,6 +43,52 @@ docker build -t qgc_ubuntu_no_gpu -f Dockerfile_qground_bluerov2 .
 ```
 ./run.bash
  ```
+# Docker Image BlueROV2 Gazebo (`bluerov2_gz`)
+
+### Clone the UnderWaterVehicle Repository
+```
+git clone https://github.com/dfl-rlab/UnderWaterVehicle.git
+```
+
+This repository contains all the necessary files to build and run the `bluerov2_gz` simulation environment.
+
+- ### **To build the Docker image for BlueROV2 Gazebo**
+   Navigate to `/docker/bluerov2_gz/` directory and build the image:
+```
+cd UnderWaterVehicle/docker/bluerov2_gz/
+
+docker build -t hub.ci.dfl.ae/roboticslab/bluerov2_gz:latest \
+  -f Dockerfile_bluerov2_gz .
+```
+
+✅ **Latest Docker image for `bluerov2_gz`.**
+
+- ### **Run the container, using this command:**
+```
+./run.bash
+```
+
+✅ **This launches the `bluerov2_gz` container with all required configurations.**
+
+- ### **Build the ROS 2 Workspace**
+   After the container is running, navigate to the ROS 2 workspace:
+```
+cd /UnderWaterVehicle/bluerov2_gz/ros2_ws
+```
+   Build the **Gazebo launch package** and **source the ROS 2 workspace**:
+```
+colcon build --packages-select gazebo_launch
+source install/setup.bash
+```
+
+✅ **This ensures that the `gazebo_launch` package is properly set up.**
+
+- ### **Launch Gazebo with BlueROV2**
+```
+ros2 launch gazebo_launch gazebo_launch.py
+```
+
+**Gazebo will start with the BlueROV2 underwater simulation loaded.**
 
 # BlueROV2 Simulation Setup Guide
 
