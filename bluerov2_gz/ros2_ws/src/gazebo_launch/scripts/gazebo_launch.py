@@ -7,14 +7,14 @@ import os
 
 def generate_launch_description():
     # Set environment variables for Gazebo
-    os.environ['GZ_SIM_RESOURCE_PATH'] = '/bluerov2_gz/models:/bluerov2_gz/worlds'
+    os.environ['GZ_SIM_RESOURCE_PATH'] = '/UnderWaterVehicle/bluerov2_gz/models:/UnderWaterVehicle/bluerov2_gz/worlds'
     os.environ['GZ_SIM_SYSTEM_PLUGIN_PATH'] = '~/ardupilot_gazebo/build'
 
     # Gazebo execution command
     gazebo_process = ExecuteProcess(
         cmd=[
             'gz', 'sim', '-v', '3', '-r',
-            '/bluerov2_gz/worlds/bluerov2_heavy_underwater.world'
+            '/UnderWaterVehicle/bluerov2_gz/worlds/bluerov2_heavy_underwater.world'
         ],
         output='screen'
     )
@@ -25,10 +25,10 @@ def generate_launch_description():
         executable="parameter_bridge",
         parameters=[{'use_sim_time': True, 'expand_gz_topic_names': True}],
         arguments=[
-            "/FL_depth_camera_sensor@sensor_msgs/msg/Image@gz.msgs.Image",
-            "/FR_depth_camera_sensor@sensor_msgs/msg/Image@gz.msgs.Image",
-            "/FR_depth_camera_rgb/rgb@sensor_msgs/msg/Image@gz.msgs.Image",
-            "/FL_depth_camera_rgb/rgb@sensor_msgs/msg/Image@gz.msgs.Image",
+            #"/FL_depth_camera_sensor@sensor_msgs/msg/Image@gz.msgs.Image",
+            #"/FR_depth_camera_sensor@sensor_msgs/msg/Image@gz.msgs.Image",
+            #"/FR_depth_camera_rgb/rgb@sensor_msgs/msg/Image@gz.msgs.Image",
+            #"/FL_depth_camera_rgb/rgb@sensor_msgs/msg/Image@gz.msgs.Image",
             "/rgb_camera@sensor_msgs/msg/Image[gz.msgs.Image",
         ],
         output="screen",

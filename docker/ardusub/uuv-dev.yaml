@@ -48,6 +48,26 @@ services:
       - "/dev:/dev"
       - "/tmp/.X11-unix:/tmp/.X11-unix:rw"
       - "${HOME}/UnderWaterVehicle:/UnderWaterVehicle"
+      
+  bluerov2_gz:
+    image: hub.ci.dfl.ae/roboticslab/bluerov2_gz:latest
+    restart: unless-stopped
+    network_mode: host
+    privileged: true
+    stdin_open: true
+    tty: true
+    volumes:
+      - "/dev:/dev"
+      - "/run/user:/run/user"
+      - "/tmp/.X11-unix:/tmp/.X11-unix:rw"
+      - "${HOME}/UnderWaterVehicle:/UnderWaterVehicle"  
+    environment:
+      - DISPLAY=$DISPLAY
+      - QT_X11_NO_MITSHM=1
+    command: ["/bin/bash", "-c", "source /opt/ros/humble/setup.bash;
+      source /UnderWaterVehicle/bluerov2_gz/ros2_ws/install/setup.bash;
+      ros2 launch gazebo_launch gazebo_launch.py"]
+    
 
   #uuv_ardusub_dev:
   #  image: hub.ci.dfl.ae/roboticslab/ros2_humble_x86_no_gpu:bluerov2
