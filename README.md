@@ -61,14 +61,14 @@ docker build -t hub.ci.dfl.ae/roboticslab/bluerov2_gz:latest \
   -f Dockerfile_bluerov2_gz .
 ```
 
-✅ **Latest Docker image for `bluerov2_gz`.**
+**Docker image `bluerov2_gz`**
 
-- ### **Run the container, using this command:**
+- ### **Run the container, using:**
 ```
 ./run.bash
 ```
 
-✅ **This launches the `bluerov2_gz` container with all required configurations.**
+**To launch `bluerov2_gz` container**
 
 - ### **Build the ROS 2 Workspace**
    After the container is running, navigate to the ROS 2 workspace:
@@ -81,14 +81,10 @@ colcon build --packages-select gazebo_launch
 source install/setup.bash
 ```
 
-✅ **This ensures that the `gazebo_launch` package is properly set up.**
-
 - ### **Launch Gazebo with BlueROV2**
 ```
 ros2 launch gazebo_launch gazebo_launch.py
 ```
-
-**Gazebo will start with the BlueROV2 underwater simulation loaded.**
 
 # BlueROV2 Simulation Setup Guide
 
