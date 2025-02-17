@@ -3,7 +3,7 @@ version: "2.4"
 services:
 
   uuv_ardusub_simulator:
-    image: hub.ci.dfl.ae/roboticslab/ros2_humble_x86_no_gpu:bluerov2
+    image: hub.ci.dfl.ae/roboticslab/bluerov2:apm
     command: bash -c "sleep 5.0 && cd ~/ardupilot && Tools/autotest/sim_vehicle.py -L RATBeach -v ArduSub -f vectored_6dof --model=JSON --out=udp:0.0.0.0:14550 --console"
     network_mode: host
     privileged: true
@@ -19,8 +19,9 @@ services:
       - "${HOME}/UnderWaterVehicle:/UnderWaterVehicle"
 
   uuv_ardusub_gazebo:
-    image: hub.ci.dfl.ae/roboticslab/ros2_humble_x86_no_gpu:bluerov2
-    command: bash -c "gz sim -v 3 -r bluerov2_heavy_underwater.world"
+    image: hub.ci.dfl.ae/roboticslab/bluerov2:gz
+    command: bash -c "source /UnderWaterVehicle/ws/install/setup.bash && ros2 launch bluerov2_gz gazebo_launch.py"
+    #command: bash -c "sleep infinity"
     network_mode: host
     privileged: true
     stdin_open: true
@@ -35,7 +36,7 @@ services:
       - "${HOME}/UnderWaterVehicle:/UnderWaterVehicle"
       
   uuv_ardusub_simulator_apm:
-    image: hub.ci.dfl.ae/roboticslab/ros2_humble_x86_no_gpu:bluerov2
+    image: hub.ci.dfl.ae/roboticslab/bluerov2:apm
     command: bash -c "sleep 10 && cd /home/bluerov2/ws && source install/setup.bash && ros2 launch mavros apm.launch"
     network_mode: host
     privileged: true
@@ -49,37 +50,18 @@ services:
       - "/tmp/.X11-unix:/tmp/.X11-unix:rw"
       - "${HOME}/UnderWaterVehicle:/UnderWaterVehicle"
       
-  bluerov2_gz:
-    image: hub.ci.dfl.ae/roboticslab/bluerov2_gz:latest
-    restart: unless-stopped
+
+  uuv_ardusub_dev:
+    image: hub.ci.dfl.ae/roboticslab/bluerov2:gz
+    command: bash -c "sleep infinity"
     network_mode: host
     privileged: true
     stdin_open: true
     tty: true
+    env_file:
+      - general.env
+    container_name: uuv_ardusub_dev
     volumes:
+      - "${HOME}/UnderWaterVehicle:/UnderWaterVehicle"
       - "/dev:/dev"
-      - "/run/user:/run/user"
       - "/tmp/.X11-unix:/tmp/.X11-unix:rw"
-      - "${HOME}/UnderWaterVehicle:/UnderWaterVehicle"  
-    environment:
-      - DISPLAY=$DISPLAY
-      - QT_X11_NO_MITSHM=1
-    command: ["/bin/bash", "-c", "source /opt/ros/humble/setup.bash;
-      source /UnderWaterVehicle/bluerov2_gz/ros2_ws/install/setup.bash;
-      ros2 launch gazebo_launch gazebo_launch.py"]
-    
-
-  #uuv_ardusub_dev:
-  #  image: hub.ci.dfl.ae/roboticslab/ros2_humble_x86_no_gpu:bluerov2
-  #  command: bash -c "sleep infinity"
-  #  network_mode: host
-  #  privileged: true
-  #  stdin_open: true
-  #  tty: true
-  #  env_file:
-  #    - general.env
-  #  container_name: uuv_ardusub_dev
-  #  volumes:
-  #    - "${HOME}/UnderWaterVehicle/ws:/home/bluerov2/ws_uuv"
-  #    - "/dev:/dev"
-  #    - "/tmp/.X11-unix:/tmp/.X11-unix:rw"
