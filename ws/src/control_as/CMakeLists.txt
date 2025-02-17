@@ -25,7 +25,7 @@ find_package(rlab_customized_ros_msg REQUIRED) # Added rlab_customized_ros_msg d
 
 
 install(
-  DIRECTORY scripts src 
+  DIRECTORY scripts launch 
   DESTINATION share/${PROJECT_NAME}
 )
 
