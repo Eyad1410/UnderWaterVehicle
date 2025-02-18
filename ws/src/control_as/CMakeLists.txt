@@ -44,6 +44,7 @@ install(PROGRAMS
   scripts/move_to_action_client.py
   scripts/move_to_action_server.py
   scripts/autonomous_controller.py
+  launch/uuv.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
