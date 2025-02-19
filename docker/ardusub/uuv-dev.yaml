@@ -52,7 +52,7 @@ services:
       
 
   uuv_ardusub_dev:
-    image: hub.ci.dfl.ae/roboticslab/bluerov2:gz
+    image: hub.ci.dfl.ae/roboticslab/bluerov2:apm
     command: bash -c "sleep infinity"
     network_mode: host
     privileged: true
