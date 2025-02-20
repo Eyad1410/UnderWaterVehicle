@@ -97,7 +97,7 @@ RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/r
 
 RUN apt-get update && apt-get install -y git
 
-RUN apt update && apt install -y ros-humble-desktop ros-humble-ros-gz
+RUN apt update && apt install -y ros-humble-desktop ros-humble-ros-gz 
 # ---
 
 # Create a non-root user
@@ -137,6 +137,9 @@ RUN git clone https://github.com/ArduPilot/ardupilot_gazebo.git
 # Build for Gazebo Harmonic, define this before building ardupilot_gazebo
 ENV GZ_VERSION=harmonic
 
+
+RUN sudo apt install -y ros-humble-ros-gzharmonic
+
 # Build ardupilot_gazebo
 RUN [ "/bin/bash" , "-c" , " \
   cd ardupilot_gazebo \
@@ -157,6 +160,9 @@ RUN echo "export PATH=/home/$USERNAME/.local/bin:\$PATH" >> /home/$USERNAME/.bas
   && echo "export GZ_SIM_SYSTEM_PLUGIN_PATH=/home/$USERNAME/ardupilot_gazebo/build" >> /home/$USERNAME/.bashrc \
   && echo "export GZ_SIM_RESOURCE_PATH=/UnderWaterVehicle/bluerov2_gz/models:/UnderWaterVehicle/bluerov2_gz/worlds" >> /home/$USERNAME/.bashrc
 
-RUN sudo apt install -y ros-humble-ros-ign-bridge
+
 # Required to use the --console option on sim_vehicle.py
 # RUN pip3 install matplotlib
+
+
+
