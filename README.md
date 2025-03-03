@@ -56,8 +56,9 @@ This repository contains all the necessary files to build and run the `bluerov2_
    Navigate to `/docker/bluerov2_gz/` directory and build the image:
 ```
 cd UnderWaterVehicle/docker/bluerov2_gz/
+./build.bash
 
-docker build -t hub.ci.dfl.ae/roboticslab/bluerov2_gz:latest \
+//docker build -t hub.ci.dfl.ae/roboticslab/bluerov2_gz:latest \
   -f Dockerfile_bluerov2_gz .
 ```
 
@@ -98,7 +99,8 @@ git clone https://github.com/dfl-rlab/UnderWaterVehicle.git
    Navigate to the Docker directory and build the image:           
 ```
 cd UnderWaterVehicle/docker/ardusub
-docker build -t hub.ci.dfl.ae/roboticslab/ros2_humble_x86_no_gpu:bluerov2 -f Dockerfile_ardupilot_bluerov2 .
+./build.bash
+//docker build -t hub.ci.dfl.ae/roboticslab/ros2_humble_x86_no_gpu:bluerov2 -f Dockerfile_ardupilot_bluerov2 .
 ```
 - ### **Start the Container Environment**         
    Use Docker Compose to launch the environment:
