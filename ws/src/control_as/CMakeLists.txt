@@ -44,6 +44,8 @@ install(PROGRAMS
   scripts/move_to_action_client.py
   scripts/move_to_action_server.py
   scripts/autonomous_controller.py
+  scripts/image_stitching.py
+  scripts/stitching_B.py
 
   DESTINATION lib/${PROJECT_NAME}
 )

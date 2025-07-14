@@ -176,8 +176,8 @@ class AutonomousROVController(Node):
         self.start_position = self.current_position
 
         while self.get_traveled_distance() < distance and rclpy.ok():
-            velocity.linear.x = 1.0 * math.cos(self.current_yaw)
-            velocity.linear.y = 1.0 * math.sin(self.current_yaw)
+            velocity.linear.x = 0.9 * math.cos(self.current_yaw)
+            velocity.linear.y = 0.9 * math.sin(self.current_yaw)
             self.velocity_publisher.publish(velocity)
             time.sleep(0.1)
 

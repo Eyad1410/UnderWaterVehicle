@@ -16,9 +16,11 @@ services:
       - "/dev:/dev"
       - "/run/user:/run/user"
       - "/tmp/.X11-unix:/tmp/.X11-unix:rw"
-      - "${HOME}/UnderWaterVehicle:/UnderWaterVehicle"
+      - "/home/eyad-saeed/UnderWaterVehicle:/UnderWaterVehicle"
 
   uuv_ardusub_gazebo:
+    environment:
+      - DISPLAY=${DISPLAY}
     image: hub.ci.dfl.ae/roboticslab/bluerov2:gz
     command: bash -c "source /UnderWaterVehicle/ws/install/setup.bash && ros2 launch bluerov2_gz gazebo_launch.py"
     #command: bash -c "sleep infinity"
@@ -33,7 +35,7 @@ services:
       - "/dev:/dev"
       - "/run/user:/run/user"
       - "/tmp/.X11-unix:/tmp/.X11-unix:rw"
-      - "${HOME}/UnderWaterVehicle:/UnderWaterVehicle"
+      - "/home/eyad-saeed/UnderWaterVehicle:/UnderWaterVehicle"
       
   uuv_ardusub_simulator_apm:
     image: hub.ci.dfl.ae/roboticslab/bluerov2:apm
@@ -48,10 +50,11 @@ services:
     volumes:
       - "/dev:/dev"
       - "/tmp/.X11-unix:/tmp/.X11-unix:rw"
-      - "${HOME}/UnderWaterVehicle:/UnderWaterVehicle"
+      - "/home/eyad-saeed/UnderWaterVehicle:/UnderWaterVehicle"
       
 
   uuv_ardusub_dev:
+    restart: unless-stopped
     image: hub.ci.dfl.ae/roboticslab/bluerov2:apm
     command: bash -c "sleep infinity"
     network_mode: host
@@ -62,6 +65,6 @@ services:
       - general.env
     container_name: uuv_ardusub_dev
     volumes:
-      - "${HOME}/UnderWaterVehicle:/UnderWaterVehicle"
+      - "/home/eyad-saeed/UnderWaterVehicle:/UnderWaterVehicle"
       - "/dev:/dev"
       - "/tmp/.X11-unix:/tmp/.X11-unix:rw"

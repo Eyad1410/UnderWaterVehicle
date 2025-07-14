@@ -1,0 +1,71 @@
+*clone repository using ssh: 
+```
+git clone git@github.com:dfl-rlab/UnderWaterVehicle.git
+```
+
+*Install docker if not installed, docker: command not found: 
+```
+sudo apt update
+sudo apt install -y docker.io
+sudo systemctl start docker
+sudo systemctl enable docker
+sudo usermod -aG docker $USER
+newgrp docker
+docker run hello-world 
+```
+
+* Docker ArduSub Build
+```
+cd UnderWaterVehicle/docker/ardusub/
+
+./build.bash
+```
+
+* Docker BlueRov2_gz Build
+```
+cd UnderWaterVehicle/docker/bluerov2_gz/
+
+./build.bash
+```
+
+**First ensure workspace is Built Correctly, exec into the Development Container:
+```
+docker exec -it uuv_ardusub_dev bash
+cd /UnderWaterVehicle/ws
+source /opt/ros/humble/setup.bash
+colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
+source install/setup.bash 
+```
+
+*use xhost +local: to gain access control list by adding non-network local connections
+```
+xhost +local:
+docker compose -f uuv-dev.yaml up
+docker restart uuv_ardusub_simulator uuv_ardusub_simulator_apm uuv_ardusub_gazebo
+```
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+**Running the manager UUV launch file:
+```
+docker exec -it uuv_ardusub_dev bash
+cd /UnderWaterVehicle/ws/
+source install/setup.bash
+ros2 launch control_as uuv.launch.py
+```
+
+*In another terminal start the FSM trigger by publishing ros2 topic:
+```
+docker exec -it uuv_ardusub_dev bash
+cd /UnderWaterVehicle/ws/
+source install/setup.bash
+ros2 topic pub /task_command std_msgs/msg/String "{data: 'start'}"
+ros2 topic pub /task_command std_msgs/msg/String "{data: 'stop'}"
+```
+
+ros2 run mavros_local_odom_tf local_odom2tf
+
+ros2 run tf2_ros static_transform_publisher 0 0 0 0 0 0 map odom
+
+
+
+
+
